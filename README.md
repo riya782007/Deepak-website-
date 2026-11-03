@@ -27,3 +27,9 @@ The enquiry form currently creates a local text file and explicitly does not sen
 Reference websites: https://softpolynomials.com/ and https://dgconsulting.in/ . Service groupings draw from their education, software, corporate training, HR and individual development offerings. Original generated concept: docs/design-concept.png. Original AI-generated team photo is illustrative, not a photograph of company employees.
 
 The production UI is live HTML/CSS, not an image of the design. The brand lockup, reusable photo in the company section and expanded footer navigation are intentional adaptations. System fonts keep the template self-contained.
+
+## Interaction and motion
+
+Shared visual refinements live in src/polish.css; navigation, search, filters and motion live in src/experience.js. Service category and search state are stored in the URL so filtered links can be shared and refreshed. Service pages preserve their selected service when opening an enquiry. Related services favour the same group.
+
+Entrance animations use the native Web Animations API with IntersectionObserver and run once per element. Content stays visible without animation support. CSS and JavaScript respect prefers-reduced-motion, including preference changes during a visit. The mobile navigation supports Escape, outside click and keyboard focus dismissal.
