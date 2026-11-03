@@ -20,7 +20,7 @@ The content is draft template copy. Confirm company identity, service offerings,
 
 ## Future integrations
 
-The enquiry form currently creates a local text file and explicitly does not send data. Replace its submit handler with a server endpoint after delivery and privacy requirements are approved. Keep validation, rate limiting, consent and CRM credentials on the server. Treat CRM delivery as a queued server operation with retries. Add hosted payment checkout through a server-created session, verify signed webhooks and make fulfilment idempotent. Add AI through a server endpoint with appropriate access controls and streaming; never expose provider keys in browser code. These integrations are architectural extension points, not active features.
+All integrations route through src/integrations.js. The enquiry form calls submitEnquiry(): with no endpoint configured it creates a local text brief (nothing is sent); set company.enquiryEndpoint in src/content.js to a server URL and the same form posts JSON there instead, so CRM delivery needs no front-end changes. Feature flags for payments and an AI assistant live in the same file. Point that endpoint at a server after delivery and privacy requirements are approved. Keep validation, rate limiting, consent and CRM credentials on the server. Treat CRM delivery as a queued server operation with retries. Add hosted payment checkout through a server-created session, verify signed webhooks and make fulfilment idempotent. Add AI through a server endpoint with appropriate access controls and streaming; never expose provider keys in browser code. These integrations are architectural extension points, not active features.
 
 ## Design
 
@@ -29,6 +29,8 @@ Reference websites: https://softpolynomials.com/ and https://dgconsulting.in/ . 
 The production UI is live HTML/CSS, not an image of the design. The brand lockup, reusable photo in the company section and expanded footer navigation are intentional adaptations. System fonts keep the template self-contained.
 
 ## Interaction and motion
+
+The final-touch layer is src/delight.css: pastel gradient heroes with drifting colour blobs, floating service chips and a gentle 3D tilt on the homepage photo, an animated keyword marquee, cursor-following highlights on cards, a self-drawing process timeline, staggered scroll reveals, a scroll progress bar, compact sticky header and back-to-top button. The homepage adds Who we serve and How we work sections; service pages add Who it’s for and the approach steps; the contact page adds What happens next, chip-style interest selection, inline validation and a character count.
 
 Shared visual refinements live in src/polish.css; navigation, search, filters and motion live in src/experience.js. Service category and search state are stored in the URL so filtered links can be shared and refreshed. Service pages preserve their selected service when opening an enquiry. Related services favour the same group.
 

@@ -60,6 +60,8 @@ export function initExperience() {
       });
       status.textContent = `${count} ${search ? (count === 1 ? 'service' : 'services') : (count === 1 ? 'perspective' : 'perspectives')}${category === 'All' ? '' : ' in ' + category}${query ? ' matching your search' : ''}`;
       empty.hidden = count > 0;
+      const guide = document.querySelector('.guide-card');
+      if (guide) guide.hidden = category !== 'All' || Boolean(query);
       if (updateUrl) {
         const url = new URL(location.href);
         category === 'All' ? url.searchParams.delete('category') : url.searchParams.set('category', category);
@@ -86,23 +88,88 @@ export function initExperience() {
     });
   });
 
-  // Content is visible by default. Animate only when it enters the viewport;
-  // no hidden content, scroll listeners, animation library or layout shifts.
+  initMotion();
+}
+
+// Motion layer. Content is always visible without JS or animation support;
+// everything below is progressive enhancement and honours reduced motion.
+function initMotion() {
   const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
-  if ('IntersectionObserver' in window) {
-    const observer = new IntersectionObserver(entries => {
-      entries.forEach(entry => {
-        if (!entry.isIntersecting) return;
-        observer.unobserve(entry.target);
-        if (!reduceMotion.matches) entry.target.animate(
-          [{opacity: 0, transform: 'translateY(18px)'}, {opacity: 1, transform: 'translateY(0)'}],
-          {duration: 650, easing: 'cubic-bezier(.2,.7,.2,1)'}
-        );
-      });
-    }, {threshold: 0.12});
-    document.querySelectorAll('.service-card, .about-block, .value-list > div, .article, .cta > .shell, .offering-list > div').forEach(el => observer.observe(el));
-    reduceMotion.addEventListener('change', () => {
-      if (reduceMotion.matches) document.getAnimations().forEach(a => a.finish());
+  const fine = matchMedia('(hover: hover) and (pointer: fine)');
+  const root = document.documentElement;
+
+  // Scroll progress, compact header and back-to-top share one rAF-throttled listener.
+  const header = document.querySelector('header');
+  const toTop = document.querySelector('.to-top');
+  const heroPhoto = document.querySelector('.hero-photo img');
+  let ticking = false;
+  const onScroll = () => {
+    ticking = false;
+    const max = root.scrollHeight - innerHeight;
+    root.style.setProperty('--progress', max > 0 ? String(scrollY / max) : '0');
+    header.classList.toggle('scrolled', scrollY > 24);
+    toTop.hidden = scrollY < innerHeight * 0.9;
+    if (heroPhoto && !reduceMotion.matches && scrollY < innerHeight) {
+      heroPhoto.style.transform = `scale(1.08) translateY(${scrollY * 0.06}px)`;
+    }
+  };
+  addEventListener('scroll', () => { if (!ticking) { ticking = true; requestAnimationFrame(onScroll); } }, {passive: true});
+  onScroll();
+  toTop.addEventListener('click', () => {
+    scrollTo({top: 0, behavior: reduceMotion.matches ? 'auto' : 'smooth'});
+    document.querySelector('.skip').focus({preventScroll: true});
+  });
+
+  // Cursor-following highlight on cards (pointer devices only).
+  document.querySelectorAll('.service-card, .audience, .guide-card').forEach(card => {
+    card.addEventListener('pointermove', e => {
+      if (!fine.matches) return;
+      const r = card.getBoundingClientRect();
+      card.style.setProperty('--mx', `${e.clientX - r.left}px`);
+      card.style.setProperty('--my', `${e.clientY - r.top}px`);
     });
+  });
+
+  // Gentle 3D tilt on the hero visual.
+  const visual = document.querySelector('.hero-visual');
+  if (visual) {
+    visual.addEventListener('pointermove', e => {
+      if (!fine.matches || reduceMotion.matches) return;
+      const r = visual.getBoundingClientRect();
+      const x = (e.clientX - r.left) / r.width - 0.5, y = (e.clientY - r.top) / r.height - 0.5;
+      visual.style.setProperty('--rx', `${(-y * 5).toFixed(2)}deg`);
+      visual.style.setProperty('--ry', `${(x * 6).toFixed(2)}deg`);
+    });
+    visual.addEventListener('pointerleave', () => { visual.style.setProperty('--rx', '0deg'); visual.style.setProperty('--ry', '0deg'); });
   }
+
+  if (!('IntersectionObserver' in window)) return;
+  // Reveal elements as they enter; children of .stagger cascade.
+  const targets = new Set(document.querySelectorAll('.section-heading, .section > h2, .section-intro, .about-block, .value-list > div, .cta > .shell, .audience-note, .next-steps li, .contact-grid form, .prose h2, .prose p'));
+  document.querySelectorAll('.stagger > *').forEach(el => targets.add(el));
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (!entry.isIntersecting) return;
+      observer.unobserve(entry.target);
+      const el = entry.target;
+      if (reduceMotion.matches) return;
+      const siblings = el.parentElement.classList.contains('stagger') ? [...el.parentElement.children].filter(c => !c.hidden) : [];
+      const delay = Math.max(0, siblings.indexOf(el)) * 90;
+      el.animate(
+        [{opacity: 0, transform: 'translateY(26px) scale(.985)'}, {opacity: 1, transform: 'none'}],
+        {duration: 750, delay, easing: 'cubic-bezier(.2,.7,.2,1)', fill: 'backwards'}
+      );
+    });
+  }, {threshold: 0.12, rootMargin: '0px 0px -40px 0px'});
+  targets.forEach(el => observer.observe(el));
+
+  // Process timelines draw their connecting line when visible.
+  const lineObserver = new IntersectionObserver(entries => entries.forEach(entry => {
+    if (entry.isIntersecting) { entry.target.classList.add('in'); lineObserver.unobserve(entry.target); }
+  }), {threshold: 0.3});
+  document.querySelectorAll('.process').forEach(el => lineObserver.observe(el));
+
+  reduceMotion.addEventListener('change', () => {
+    if (reduceMotion.matches) document.getAnimations().forEach(a => a.finish());
+  });
 }
