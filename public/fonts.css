@@ -1,0 +1,2 @@
+/* System fallback keeps all typography local and avoids tracking requests. */
+@font-face{font-family:Inter;src:local('Inter');font-display:swap}
