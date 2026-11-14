@@ -17,8 +17,10 @@ Parameters:
     Description: Other web addresses allowed to call the API (the live domain, local development).
   GitHubRepo:
     Type: String
-    Default: riya782007/Deepak-website-
-    Description: The GitHub repository allowed to deploy (main and admin-console branches).
+    Default: riya782007@237364404/Deepak-website-@1443810576
+    Description: >-
+      The GitHub repository allowed to deploy (main and admin-console branches), as GitHub writes it
+      in its sign-in token: owner@ownerId/repo@repoId. The ids stay the same if the repo is renamed.
   CodeS3Bucket:
     Type: String
     Default: ''
