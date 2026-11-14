@@ -15,6 +15,10 @@ Parameters:
     Type: CommaDelimitedList
     Default: 'http://127.0.0.1:5173,http://127.0.0.1:4173'
     Description: Other web addresses allowed to call the API (the live domain, local development).
+  GitHubRepo:
+    Type: String
+    Default: riya782007/Deepak-website-
+    Description: The GitHub repository allowed to deploy (main and admin-console branches).
   CodeS3Bucket:
     Type: String
     Default: ''
@@ -254,6 +258,51 @@ Resources:
           - {ErrorCode: 403, ResponseCode: 404, ResponsePagePath: /404.html, ErrorCachingMinTTL: 60}
           - {ErrorCode: 404, ResponseCode: 404, ResponsePagePath: /404.html, ErrorCachingMinTTL: 60}
 
+  # ---------- Deploys from GitHub Actions with short-lived credentials (no stored keys) ----------
+  GitHubOidc:
+    Type: AWS::IAM::OIDCProvider
+    Properties:
+      Url: https://token.actions.githubusercontent.com
+      ClientIdList: [sts.amazonaws.com]
+
+  GitHubDeployRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: sb-github-deploy
+      MaxSessionDuration: 3600
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: {Federated: !Ref GitHubOidc}
+            Action: sts:AssumeRoleWithWebIdentity
+            Condition:
+              StringEquals: {'token.actions.githubusercontent.com:aud': sts.amazonaws.com}
+              StringLike:
+                'token.actions.githubusercontent.com:sub':
+                  - !Sub 'repo:${GitHubRepo}:ref:refs/heads/main'
+                  - !Sub 'repo:${GitHubRepo}:ref:refs/heads/admin-console'
+      Policies:
+        - PolicyName: deploy-site-and-api
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: [s3:ListBucket]
+                Resource: !GetAtt SiteBucket.Arn
+              - Effect: Allow
+                Action: [s3:PutObject, s3:DeleteObject]
+                Resource: !Sub '${SiteBucket.Arn}/*'
+              - Effect: Allow
+                Action: [cloudfront:CreateInvalidation]
+                Resource: !Sub 'arn:aws:cloudfront::${AWS::AccountId}:distribution/${Distribution}'
+              - Effect: Allow
+                Action: [lambda:UpdateFunctionCode, lambda:GetFunction]
+                Resource: !GetAtt Api.Arn
+              - Effect: Allow
+                Action: [cloudformation:DescribeStacks]
+                Resource: !Ref AWS::StackId
+
   # ---------- Cost guard: emails if the month's bill heads past the threshold ----------
   Budget:
     Type: AWS::Budgets::Budget
@@ -278,3 +327,4 @@ Outputs:
   SiteBucketName: {Value: !Ref SiteBucket}
   DistributionId: {Value: !Ref Distribution}
   Region: {Value: !Ref AWS::Region}
+  DeployRoleArn: {Value: !GetAtt GitHubDeployRole.Arn}

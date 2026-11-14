@@ -37,7 +37,8 @@ Live updates poll for changes every 15 seconds while the console tab is open, an
 1. **Open the AWS account** in Soft Binomials' name (company email, company card, Paid plan). Turn on multi-factor sign-in for the root user and create an admin user for day-to-day work.
 2. **Deploy.** With the AWS CLI signed in to that account:
    `ALERT_EMAIL=accounts@yourcompany.in ./infra/deploy.sh`
-   This creates the stack, uploads the API code, builds the site with the right settings and publishes it. Run the same command for every later update.
+   This creates the stack, uploads the API code, builds the site with the right settings and publishes it.
+   **Later updates deploy themselves:** `.github/workflows/deploy.yml` runs on every push to `main` (and `admin-console` while it is open). It signs in to AWS with short-lived credentials through the `sb-github-deploy` role, so no AWS keys are stored in GitHub. It needs one repository variable, `AWS_ROLE_ARN`, set to the stack output `DeployRoleArn`.
 3. **Make the first owner.** In the AWS console open Cognito → user pool `sb-console-staff` → Create user, with the owner's email and "Send an email invitation". Then add that user to the `owner` group. (The console's own Invite button does the same for everyone after that.)
 4. **Add the team.** The owner opens Setup → Team and roles and invites each person with a role. They get an email with a temporary password and choose their own the first time. Pick **No access** to switch someone off; this also signs them out everywhere within 30 minutes.
 5. **Bring in existing data.** Use **Import from Excel** on Enquiries, Students and Trainers.

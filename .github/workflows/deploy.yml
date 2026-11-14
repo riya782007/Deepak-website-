@@ -1,0 +1,73 @@
+name: Deploy to AWS
+
+# Builds the website and console and publishes them, plus the console API code.
+# AWS access is short-lived (OpenID Connect), so no keys are stored in GitHub.
+# Repository variables: AWS_ROLE_ARN (stack output DeployRoleArn), AWS_REGION (ap-south-1).
+on:
+  push:
+    branches: [main, admin-console]
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+env:
+  STACK: soft-binomials
+  AWS_REGION: ${{ vars.AWS_REGION || 'ap-south-1' }}
+
+jobs:
+  deploy:
+    if: ${{ vars.AWS_ROLE_ARN != '' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm test
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Read stack outputs
+        run: |
+          out() { aws cloudformation describe-stacks --stack-name "$STACK" --query "Stacks[0].Outputs[?OutputKey=='$1'].OutputValue" --output text; }
+          {
+            echo "API_URL=$(out ApiUrl)"
+            echo "CLIENT_ID=$(out UserPoolClientId)"
+            echo "BUCKET=$(out SiteBucketName)"
+            echo "DISTRIBUTION=$(out DistributionId)"
+            echo "SITE_URL=$(out SiteUrl)"
+          } >> "$GITHUB_ENV"
+
+      - name: Update the console API
+        run: |
+          (cd infra/api && zip -q -r ../../api.zip .)
+          aws lambda update-function-code --function-name sb-console-api --zip-file fileb://api.zip --query LastUpdateStatus --output text
+
+      - name: Build
+        run: npm run build
+        env:
+          VITE_CONSOLE_API_URL: ${{ env.API_URL }}
+          VITE_AWS_REGION: ${{ env.AWS_REGION }}
+          VITE_COGNITO_CLIENT_ID: ${{ env.CLIENT_ID }}
+
+      - name: Publish
+        run: |
+          aws s3 sync dist/assets "s3://$BUCKET/assets" --cache-control "public,max-age=31536000,immutable"
+          aws s3 sync dist "s3://$BUCKET" --delete --exclude "assets/*" --cache-control "public,max-age=0,must-revalidate"
+          aws cloudfront create-invalidation --distribution-id "$DISTRIBUTION" --paths "/*" --query Invalidation.Status --output text
+          echo "Published to $SITE_URL" >> "$GITHUB_STEP_SUMMARY"
