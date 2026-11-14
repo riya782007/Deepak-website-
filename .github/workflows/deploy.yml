@@ -2,7 +2,8 @@ name: Deploy to AWS
 
 # Builds the website and console and publishes them, plus the console API code.
 # AWS access is short-lived (OpenID Connect), so no keys are stored in GitHub.
-# Repository variables: AWS_ROLE_ARN (stack output DeployRoleArn), AWS_REGION (ap-south-1).
+# The role ARN below is the stack output DeployRoleArn. It is not a secret: AWS only lets
+# this repository's main and admin-console branches use it (infra/template.yaml).
 on:
   push:
     branches: [main, admin-console]
@@ -18,11 +19,11 @@ concurrency:
 
 env:
   STACK: soft-binomials
-  AWS_REGION: ${{ vars.AWS_REGION || 'ap-south-1' }}
+  AWS_REGION: ap-south-1
+  AWS_ROLE_ARN: arn:aws:iam::777539904420:role/sb-github-deploy
 
 jobs:
   deploy:
-    if: ${{ vars.AWS_ROLE_ARN != '' }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -39,7 +40,7 @@ jobs:
 
       - uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          role-to-assume: ${{ env.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Read stack outputs
