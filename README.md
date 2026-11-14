@@ -38,4 +38,4 @@ Entrance animations use the native Web Animations API with IntersectionObserver 
 
 ## Admin console
 
-Staff operations console at `/admin/`: enquiries, admissions, fees and receipts, batches and attendance, trainers and payouts, corporate workshops, Excel import and export. It runs in demo mode until a Supabase project is connected; see [admin/README.md](admin/README.md). The database script is `supabase/migrations/0001_operations_console.sql`, and `npm test` checks its permissions.
+Staff operations console at `/admin/`: enquiries, admissions, fees and receipts, batches and attendance, trainers and payouts, corporate workshops, Excel import and export. It runs in demo mode until it is deployed to AWS (Mumbai) with `infra/deploy.sh`; see [admin/README.md](admin/README.md) for setup and the running-cost breakdown. `npm test` checks the API's permissions.

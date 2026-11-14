@@ -1,5 +1,5 @@
 // Soft Binomials operations console. Rendering and workflows live here;
-// storage comes from a backend: store-demo.js (browser only) or store-supabase.js (live).
+// storage comes from a backend: store-demo.js (browser only) or store-aws.js (live).
 let BACKEND;
 export function startConsole(backend){
 BACKEND=backend;
@@ -202,11 +202,22 @@ function render(){
   $('#view').innerHTML=fn();
   if(view==='setup'&&BACKEND.team)loadTeam();
 }
+const ROLE_LABEL={pending:'No access',viewer:'Viewer',staff:'Staff',admin:'Admin',owner:'Owner'};
 async function loadTeam(){
   const box=$('#teamList');if(!box)return;
   try{
     const rows=await BACKEND.team.list();const owner=ROLE==='owner';
-    box.innerHTML=`<div class="list">${rows.map(r=>`<div class="row"><div class="main"><b>${esc(r.name||r.email)}</b><span>${esc(r.email)}</span></div><div class="side-act">${owner&&r.user_id!==BACKEND.me.id?`<select class="inline" data-a="setrole" data-id="${r.user_id}" aria-label="Role for ${esc(r.email)}">${['pending','viewer','staff','admin','owner'].map(x=>`<option value="${x}" ${r.role===x?'selected':''}>${x[0].toUpperCase()+x.slice(1)}</option>`).join('')}</select>`:pill(r.role[0].toUpperCase()+r.role.slice(1),r.role==='pending'?'warn':'acc')}</div></div>`).join('')}</div>${owner?'<p style="margin:10px 0 0;font-size:12.5px;color:var(--muted)">Ask new team members to open this console and sign in with their work email. They appear here as Pending.</p>':''}`;
+    const invite=owner&&BACKEND.team.invite?`<form id="inviteForm" class="invite" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;align-items:end;margin-top:14px">
+      <label class="fld"><span>Email</span><input name="email" type="email" required autocomplete="off"></label>
+      <label class="fld"><span>Name</span><input name="name" type="text" autocomplete="off"></label>
+      <label class="fld"><span>Role</span><select name="role">${['staff','viewer','admin','owner'].map(x=>`<option value="${x}">${ROLE_LABEL[x]}</option>`).join('')}</select></label>
+      <button class="btn pri" type="submit">Invite</button></form>
+      <p style="margin:8px 0 0;font-size:12.5px;color:var(--muted)">They get an email with a temporary password and choose their own when they first sign in. Pick <b>No access</b> to switch someone off.</p>`:'';
+    box.innerHTML=`<div class="list">${rows.map(r=>`<div class="row"><div class="main"><b>${esc(r.name||r.email)}</b><span>${esc(r.email)}${r.invited?' · invited, not signed in yet':''}</span></div><div class="side-act">${owner&&r.user_id!==BACKEND.me.id?`<select class="inline" data-a="setrole" data-id="${esc(r.user_id)}" aria-label="Role for ${esc(r.email)}">${['pending','viewer','staff','admin','owner'].map(x=>`<option value="${x}" ${r.role===x?'selected':''}>${ROLE_LABEL[x]}</option>`).join('')}</select>`:pill(ROLE_LABEL[r.role]||r.role,r.role==='pending'?'warn':'acc')}</div></div>`).join('')}</div>${invite}`;
+    const f=$('#inviteForm');
+    if(f)f.addEventListener('submit',async ev=>{ev.preventDefault();const btn=f.querySelector('button');btn.disabled=true;const v=Object.fromEntries(new FormData(f));
+      try{const r=await BACKEND.team.invite(v.email.trim(),v.name.trim(),v.role);if(r&&r.ok===false){toast(r.error,'bad');btn.disabled=false;return}toast(`Invitation sent to ${v.email.trim()}`);loadTeam()}
+      catch(e){toast(e&&e.message?e.message:'Couldn’t send the invitation.','bad');btn.disabled=false}});
   }catch(e){console.error(e);box.innerHTML='<p class="empty">Couldn’t load the team list.</p>'}
 }
 function route(){const h=location.hash.slice(1);view=VIEWS.some(v=>v[0]===h)?h:'home';Q='';$('#q').value='';render();window.scrollTo(0,0)}
@@ -404,7 +415,7 @@ function vSetup(){
   </form></section>
   <div class="grid">
   <section class="card"><div class="card-h"><h2>Sample data</h2></div>${ns?`<p style="margin:0 0 12px">${ns} sample records are loaded so you can see how each module works. Remove them before entering real admissions, fees and trainers.</p><div class="acts w" id="sampleActs"><button class="btn danger" data-a="rmsamples">Remove sample data</button></div>`:`<p style="margin:0;color:var(--muted)">No sample records. Everything here is your own data.</p>`}</section>
-  <section class="card"><div class="card-h"><h2>Team and roles</h2></div>${BACKEND.team?`<div id="teamList"><p class="empty">Loading team…</p></div>`:`<p style="margin:0;color:var(--muted)">In the live console each person signs in with their own email. New sign-ins wait as Pending until the owner gives them a role here.</p>`}
+  <section class="card"><div class="card-h"><h2>Team and roles</h2></div>${BACKEND.team?`<div id="teamList"><p class="empty">Loading team…</p></div>`:`<p style="margin:0;color:var(--muted)">In the live console the owner invites each person by email and picks their role here.</p>`}
   <dl class="kv" style="margin-top:12px;font-size:12.5px"><dt>Owner</dt><dd>Everything, including roles</dd><dt>Admin</dt><dd>Add, edit and delete records</dd><dt>Staff</dt><dd>Add and edit records; cannot delete</dd><dt>Viewer</dt><dd>Read only</dd></dl></section>
   <section class="card"><div class="card-h"><h2>Records</h2></div><dl class="kv">${COLS.map(k=>`<dt>${NOUN[k][0].toUpperCase()+NOUN[k].slice(1)}s</dt><dd class="num">${S[k].length}</dd>`).join('')}</dl><div class="acts" style="margin-top:12px"><button class="btn sm" data-a="backup">Download all data (Excel)</button></div></section>
   </div></div>`;

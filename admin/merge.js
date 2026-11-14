@@ -1,5 +1,5 @@
 // Nested objects merge key by key; arrays and plain values are replaced.
-// Mirrors public.jsonb_deep_merge in the database migration.
+// The API applies the same rules on the server (infra/api/merge.mjs).
 export function deepMerge(a, b) {
   if (!isObj(a) || !isObj(b)) return b;
   const out = {...a};

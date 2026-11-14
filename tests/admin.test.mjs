@@ -9,7 +9,7 @@ test('partial updates merge nested objects and replace arrays', () => {
   assert.deepEqual(next, {code: 'B1', attendance: {'2026-11-10': ['a', 'b'], '2026-11-12': ['a']}, days: ['Tue', 'Thu']});
 });
 
-test('a website enquiry becomes a New console enquiry the database will accept', () => {
+test('a website enquiry becomes a New console enquiry the console API will accept', () => {
   const form = new FormData();
   form.set('name', ' Asha Rao '); form.set('email', 'asha@example.com'); form.set('phone', '98200 11122');
   form.set('organisation', 'Kaveri Finance'); form.set('service', 'corporate-training'); form.set('message', 'Leadership workshop for 20 managers.');

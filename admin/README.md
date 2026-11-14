@@ -8,45 +8,66 @@ Website content (services, case studies, leadership, history, insights) is manag
 
 | Mode | When | Data |
 | --- | --- | --- |
-| Demo | `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` not set | Sample records in the visitor's browser only. **Reset demo data** restores them. Safe for showing the console. |
-| Live | Both variables set at build time | Supabase database in Soft Binomials' name. Each person signs in with their own work email. |
+| Demo | `VITE_CONSOLE_API_URL`, `VITE_AWS_REGION` and `VITE_COGNITO_CLIENT_ID` not set | Sample records in the visitor's browser only. **Reset demo data** restores them. Safe for showing the console. |
+| Live | All three set at build time | AWS account in Soft Binomials' name, Mumbai region. Each person signs in with their own email and password. |
 
 Run it locally with `npm run dev` and open http://127.0.0.1:5173/admin/.
 
-## Going live (about 30 minutes)
+## What runs on AWS, and what it costs
 
-1. **Create the database.** Sign in to supabase.com with a company email (not a personal one) and create a project in the **South Asia (Mumbai)** region. Keep the database password in the company password manager.
-2. **Create the tables and permissions.** Open SQL Editor, paste `supabase/migrations/0001_operations_console.sql` and run it.
-3. **Sign-in emails.** Under Authentication → URL Configuration, add the console address (for example `https://admin.yourdomain.in/admin/`) to *Redirect URLs*. Under Authentication → SMTP, connect the company mail service. Supabase's built-in mailer is limited to a few emails an hour, which is enough for testing but not for daily use.
-4. **Connect the build.** Copy `.env.example` to `.env.local` (or set the same variables in Cloudflare Pages) using Project Settings → API: the project URL and the `anon` public key. Never use the `service_role` key in this project.
-5. **Make the first owner.** Open the console, sign in with the owner's email, then run this in SQL Editor:
-   `update public.staff set role = 'owner' where email = 'owner@yourcompany.in';`
-6. **Add the team.** Each person opens the console and signs in. They appear in Setup → Team and roles as *Pending* with no access until the owner picks a role.
-7. **Bring in existing data.** Use **Import from Excel** on Enquiries, Students and Trainers. In demo mode, use **Remove sample data** in Setup first.
+Everything is in `infra/template.yaml` (one CloudFormation stack, region **ap-south-1, Mumbai**). It is designed to stay inside AWS's always-free allowances at this console's size, so the expected bill is close to zero.
+
+| Piece | Service | Free allowance (every month, not just the first year) |
+| --- | --- | --- |
+| Sign-in | Cognito, Lite tier | 10,000 monthly active users |
+| Data | DynamoDB, one table with 5 read and 5 write units (plus 5 and 5 for its index) | 25 GB and 25 read / 25 write units |
+| API | One Lambda function with its own web address (no API Gateway) | 1 million requests |
+| Website and console | Private S3 bucket behind CloudFront | 1 TB of traffic and 10 million requests |
+| Logs | CloudWatch, kept 14 days | 5 GB |
+| Cost alert | AWS Budgets | Free |
+
+Small costs that can appear: S3 storage for the site (a few rupees a month at most) and point-in-time backup of the table (cents for this much data). There are no servers, NAT gateways, firewalls or Route 53 zones that bill by the hour. The budget alert emails `AlertEmail` if the month's spend passes half of `MonthlyBudgetUsd` (US$2 by default) or is forecast to pass all of it.
+
+Live updates poll for changes every 15 seconds while the console tab is open, and stop when it is hidden. Five people working a full day use about 10,000 API requests, about 1% of the free allowance.
+
+**Account note.** AWS accounts opened after 15 July 2025 choose a Free or Paid plan at sign-up. A Free-plan account closes after six months or when its credits run out, so open the company account on the **Paid** plan; the always-free allowances above still apply.
+
+## Going live
+
+1. **Open the AWS account** in Soft Binomials' name (company email, company card, Paid plan). Turn on multi-factor sign-in for the root user and create an admin user for day-to-day work.
+2. **Deploy.** With the AWS CLI signed in to that account:
+   `ALERT_EMAIL=accounts@yourcompany.in ./infra/deploy.sh`
+   This creates the stack, uploads the API code, builds the site with the right settings and publishes it. Run the same command for every later update.
+3. **Make the first owner.** In the AWS console open Cognito → user pool `sb-console-staff` → Create user, with the owner's email and "Send an email invitation". Then add that user to the `owner` group. (The console's own Invite button does the same for everyone after that.)
+4. **Add the team.** The owner opens Setup → Team and roles and invites each person with a role. They get an email with a temporary password and choose their own the first time. Pick **No access** to switch someone off; this also signs them out everywhere within 30 minutes.
+5. **Bring in existing data.** Use **Import from Excel** on Enquiries, Students and Trainers.
+6. **Custom domain (optional).** Request a free certificate in ACM (us-east-1) for, say, `www.softbinomials.in`, add it and the domain to the CloudFront distribution, point the domain's DNS at CloudFront at your registrar, and pass `EXTRA_ORIGINS=https://www.softbinomials.in` to `deploy.sh` so the website form can reach the API.
+
+Cognito's built-in email is limited to 50 emails a day, which covers invitations and password resets for a small team. If that ever runs short, connect Amazon SES.
 
 ## Roles
 
 | Role | Can |
 | --- | --- |
-| Owner | Everything, including changing roles. There must always be at least one owner. |
-| Admin | Add, edit and delete records; read the audit trail |
+| Owner | Everything, including inviting people and changing roles. There must always be at least one owner. |
+| Admin | Add, edit and delete records; read the audit trail and the team list |
 | Staff | Add and edit records; cannot delete |
 | Viewer | Read only |
-| Pending | Nothing until the owner assigns a role |
+| No access | Signed out and blocked until the owner picks a role |
 
-Every change to students, payments, payouts, trainers and corporate workshops is recorded in `audit_log` (who, when, before and after). Only admins and owners can read it.
+Every change to students, payments, payouts, trainers and corporate workshops is recorded in an audit trail (who, when, before and after). Only admins and owners can read it (`GET /audit`).
 
 ## Website enquiries
 
-When the website is built with the same two variables, the contact form adds each enquiry to the console's Enquiries board as **New**, source **Website**. Row-level security lets website visitors add a New enquiry and nothing else: they cannot read, edit or delete any record. Add Cloudflare Turnstile to the form before launch to stop spam (see the proposal).
+When the website is built with `VITE_CONSOLE_API_URL`, the contact form posts to the API's public route, which rebuilds the record on the server as a **New** enquiry from **Website**; it can't set any other field or touch other records. A hidden honeypot field drops simple bots. Add reCAPTCHA or Cloudflare Turnstile before launch if spam appears.
 
 ## How data is stored
 
-Each table (`enquiries`, `students`, `programmes`, `batches`, `trainers`, `payments`, `payouts`, `engagements`, `config`) holds one JSON document per row. That matches how the console works and lets fields be added without migrations. Partial updates go through `patch_doc`, which merges nested objects (for example a day's attendance) and replaces lists. Live updates use Supabase Realtime, so two people see each other's changes without refreshing.
+One DynamoDB table holds one JSON document per record, keyed by collection and id. Partial updates merge nested objects (for example a day's attendance) and replace lists, and two people saving the same record at once both keep their changes. Deleted records leave a marker for 30 days so every open console removes them, then DynamoDB clears it for free.
 
 ## Tests
 
-`npm test` runs the database script against a real Postgres engine (PGlite) and checks every role, the website form permission, the audit trail and the last-owner guard. The live store (`store-supabase.js`) has not yet been tested against a hosted Supabase project; do that as the first step after step 4.
+`npm test` runs the API against in-memory stand-ins for DynamoDB and Cognito with real signed tokens: every role, merges, simultaneous saves, the change feed, deletions, the audit trail, the last-owner guard and the website route. The template is checked with `cfn-lint`.
 
 ## Known issue
 

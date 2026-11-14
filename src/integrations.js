@@ -1,14 +1,13 @@
 // Single switchboard for integrations. Nothing here sends data until it is configured.
-// Secrets never live in browser code: the database key below is the public "anon" key,
-// which row-level security limits to adding a New website enquiry (supabase/migrations).
+// Secrets never live in browser code. The console API's public route only accepts a
+// New website enquiry and rebuilds the record on the server (infra/api/app.mjs).
 import {company} from './content.js';
 
 const env = import.meta.env || {};
-const CONSOLE_URL = env.VITE_SUPABASE_URL;
-const CONSOLE_KEY = env.VITE_SUPABASE_ANON_KEY;
+const CONSOLE_API = (env.VITE_CONSOLE_API_URL || '').replace(/\/$/, '');
 
 export const features = {
-  console: Boolean(CONSOLE_URL && CONSOLE_KEY), // enquiries land on the admin console's Enquiries board
+  console: Boolean(CONSOLE_API),           // enquiries land on the admin console's Enquiries board
   crm: Boolean(company.enquiryEndpoint),        // enquiries POST to your server, which forwards to a CRM
   payments: false,                              // server-created hosted checkout session (e.g. Razorpay)
   assistant: false                              // AI assistant via a server-side streaming endpoint
@@ -43,10 +42,10 @@ export function enquiryDocument(data) {
 // Returns {sent:true} when delivered, otherwise {sent:false, file} with a local text brief.
 export async function submitEnquiry(data, summary) {
   if (features.console) {
-    const response = await fetch(`${CONSOLE_URL}/rest/v1/enquiries`, {
+    const response = await fetch(`${CONSOLE_API}/public/enquiry`, {
       method: 'POST',
-      headers: {apikey: CONSOLE_KEY, Authorization: `Bearer ${CONSOLE_KEY}`, 'Content-Type': 'application/json', Prefer: 'return=minimal'},
-      body: JSON.stringify({data: enquiryDocument(data)})
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({...enquiryDocument(data), website: String(data.get('website') || '')})
     });
     if (!response.ok) throw new Error('Enquiry could not be sent');
   }
