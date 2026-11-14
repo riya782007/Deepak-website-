@@ -38,6 +38,11 @@ jobs:
 
       - run: npm test
 
+      - name: Show the sign-in identity AWS will check
+        run: |
+          curl -sS -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=sts.amazonaws.com" \
+            | python3 -c "import sys,json,base64;t=json.load(sys.stdin)['value'].split('.')[1];c=json.loads(base64.urlsafe_b64decode(t+'='*(-len(t)%4)));print({k:c.get(k) for k in ('sub','aud','repository','ref')})"
+
       - uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ env.AWS_ROLE_ARN }}
