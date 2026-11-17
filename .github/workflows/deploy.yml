@@ -78,7 +78,7 @@ jobs:
           code() { curl -s -o /dev/null -w "%{http_code}" "$@"; }
           fail=0
           check() { got=$(code "${@:3}"); if [ "$got" = "$2" ]; then echo "ok   $2 $1"; else echo "FAIL $1: expected $2, got $got"; fail=1; fi; }
-          for p in / /about/ /services/ /contact/ /admin/; do check "$p" 200 "$SITE_URL$p"; done
+          for p in / /about/ /services/ /contact/ /admin/ /demo/; do check "$p" 200 "$SITE_URL$p"; done
           check "missing page" 404 "$SITE_URL/no-such-page/"
           check "API without sign-in" 401 "${API_URL%/}/me"
           origin=$(curl -s -D - -o /dev/null -X OPTIONS "${API_URL%/}/docs" -H "Origin: $SITE_URL" -H "Access-Control-Request-Method: GET" -H "Access-Control-Request-Headers: authorization" | tr -d '\r' | awk -F': ' 'tolower($1)=="access-control-allow-origin"{print $2}')

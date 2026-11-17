@@ -11,6 +11,8 @@ Website content (services, case studies, leadership, history, insights) is manag
 | Demo | `VITE_CONSOLE_API_URL`, `VITE_AWS_REGION` and `VITE_COGNITO_CLIENT_ID` not set | Sample records in the visitor's browser only. **Reset demo data** restores them. Safe for showing the console. |
 | Live | All three set at build time | AWS account in Soft Binomials' name, Mumbai region. Each person signs in with their own email and password. |
 
+**Review copy.** `/demo/` always runs the console with sample data in the visitor's browser, even on the live site, with a short guided tour. Share it with anyone who should try the console without a login; it never touches real records.
+
 Run it locally with `npm run dev` and open http://127.0.0.1:5173/admin/.
 
 ## What runs on AWS, and what it costs
@@ -56,7 +58,7 @@ Cognito's built-in email is limited to 50 emails a day, which covers invitations
 | Viewer | Read only |
 | No access | Signed out and blocked until the owner picks a role |
 
-Every change to students, payments, payouts, trainers and corporate workshops is recorded in an audit trail (who, when, before and after). Only admins and owners can read it (`GET /audit`).
+Every change to students, payments, payouts, trainers and corporate workshops is recorded in an audit trail (who, when, before and after). Admins and the owner see the latest entries under Setup → Recent changes (`GET /audit`).
 
 ## Website enquiries
 

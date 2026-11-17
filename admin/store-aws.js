@@ -231,6 +231,7 @@ export async function awsBackend({api: apiUrl, region, clientId}) {
     me: {id: me.id, name: me.name || me.email, email: me.email},
     db: makeDb(api),
     signOut,
+    audit: me.role === 'owner' || me.role === 'admin' ? {list: async () => (await api('GET', '/audit?limit=100')).entries} : null,
     team: me.role !== 'owner' && me.role !== 'admin' ? null : {
       list: async () => (await api('GET', '/team')).people,
       setRole: (id, role) => api('PUT', `/team/${encodeURIComponent(id)}`, {role}),

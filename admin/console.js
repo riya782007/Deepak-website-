@@ -167,7 +167,7 @@ const del=(c,id)=>DB.collection(c).doc(id).delete();
 async function connect(){
   const b=BACKEND;DB=b.db;CONNECTED=true;MODE=b.mode;ROLE=b.role||'owner';
   $('#me').innerHTML=`<span class="who"></span>${b.signOut?'<button class="btn sm ghost" data-a="signout">Sign out</button>':''}`;
-  $('#me .who').textContent=b.mode==='demo'?'Demo mode':(b.me&&b.me.name?`Signed in as ${b.me.name}`:'Signed in');
+  $('#me .who').textContent=b.review?'Review copy':b.mode==='demo'?'Demo mode':(b.me&&b.me.name?`Signed in as ${b.me.name}`:'Signed in');
   if(ROLE==='viewer'){RO=true;document.body.classList.add('ro')}
   if(!['admin','owner'].includes(ROLE))document.body.classList.add('nodel');
   const db=DB;
@@ -187,11 +187,13 @@ function nav(){
 }
 function banners(){
   const out=[];
-  if(MODE==='demo')out.push(`<div class="banner info"><span><b>Demo mode.</b> Records are examples kept only in this browser. Connect the database (see admin/README.md) to start using real data.</span><button class="btn sm" data-a="resetdemo">Reset demo data</button></div>`);
+  if(MODE==='demo')out.push(BACKEND.review
+    ?`<div class="banner info"><span><b>Review copy.</b> Every name and number here is sample data, saved only in your browser. Try anything: add, edit, take attendance, print receipts. Nothing is sent anywhere.</span><button class="btn sm" data-a="resetdemo">Start over</button></div>`
+    :`<div class="banner info"><span><b>Demo mode.</b> Records are examples kept only in this browser. Connect the database (see admin/README.md) to start using real data.</span><button class="btn sm" data-a="resetdemo">Reset demo data</button></div>`);
   if(CONNECTED&&!LOADED)out.push(`<div class="banner info">Loading records…</div>`);
   if(RO)out.push(`<div class="banner info">You can view records but not change them. Ask the owner to change your role in Setup.</div>`);
   const ns=COLS.reduce((a,c)=>a+S[c].filter(d=>d.sample).length,0);
-  if(ns)out.push(`<div class="banner"><span>${ns} records marked <span class="sample">Sample</span> are examples to show how the console works. Remove them from Setup before you start entering real data.</span><a class="btn sm w" href="#setup">Go to Setup</a></div>`);
+  if(ns&&!BACKEND.review)out.push(`<div class="banner"><span>${ns} records marked <span class="sample">Sample</span> are examples to show how the console works. Remove them from Setup before you start entering real data.</span><a class="btn sm w" href="#setup">Go to Setup</a></div>`);
   $('#banners').innerHTML=out.join('');
 }
 function render(){
@@ -201,6 +203,21 @@ function render(){
   const fn={home:vHome,enquiries:vEnquiries,students:vStudents,batches:vBatches,trainers:vTrainers,corporate:vCorporate,fees:vFees,programmes:vProgrammes,reports:vReports,setup:vSetup}[view]||vHome;
   $('#view').innerHTML=fn();
   if(view==='setup'&&BACKEND.team)loadTeam();
+  if(view==='setup'&&BACKEND.audit)loadAudit();
+}
+const ACT={insert:'added',update:'changed',delete:'deleted'};
+function auditLabel(e){
+  let d={};try{d=JSON.parse(e.after||e.before||'{}')}catch{}
+  const noun=NOUN[e.coll]||e.coll;
+  const what=e.coll==='payments'||e.coll==='payouts'?[d.amount&&inr(d.amount),d.receiptNo].filter(Boolean).join(' · '):d.name||d.client||d.title||'';
+  return `${ACT[e.action]||e.action} ${noun}${what?` <b>${esc(String(what))}</b>`:''}`;
+}
+async function loadAudit(){
+  const box=$('#auditList');if(!box)return;
+  try{
+    const rows=(await BACKEND.audit.list()).slice(0,40);
+    box.innerHTML=rows.length?`<div class="list">${rows.map(e=>`<div class="row"><div class="main"><span style="color:var(--ink)">${auditLabel(e)}</span><span>${esc(e.email||'Website')} · ${esc(new Date(e.at).toLocaleString('en-IN',{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'}))}</span></div></div>`).join('')}</div>`:'<p class="empty">No changes yet. Edits to students, fees, payouts, trainers and corporate workshops will be listed here.</p>';
+  }catch(e){console.error(e);box.innerHTML='<p class="empty">Couldn’t load recent changes.</p>'}
 }
 const ROLE_LABEL={pending:'No access',viewer:'Viewer',staff:'Staff',admin:'Admin',owner:'Owner'};
 async function loadTeam(){
@@ -224,6 +241,19 @@ function route(){const h=location.hash.slice(1);view=VIEWS.some(v=>v[0]===h)?h:'
 
 /* ---------- views ---------- */
 function kpi(l,v,s,href,alert){return `<a class="kpi ${alert?'alert':''}" href="#${href}"><span class="l">${l}</span><span class="v">${v}</span><span class="s">${s}</span></a>`}
+const TOUR=[
+  ['enquiries','Follow up a lead','Open Enquiries, move a card to the next stage, then convert one into an admission.'],
+  ['students','Collect a fee','Open a student, record a payment and download the PDF receipt.'],
+  ['batches','Take attendance','Open a running batch, tick who came today and save.'],
+  ['trainers','Onboard a trainer','Move a trainer through the pipeline and tick off their documents.'],
+  ['corporate','Bill a workshop','Open a corporate workshop and download its proforma invoice.'],
+  ['fees','Chase dues','See who owes what, copy the reminder list, record a trainer payout.'],
+  ['reports','Check the numbers','Monthly collections, enquiry conversions and outstanding fees.'],
+  ['setup','Bring in your Excel','Use Import on Enquiries, Students or Trainers with one of your own sheets.']];
+const TOUR_KEY='sb-review-tour-hidden';
+function tourHidden(){try{return localStorage.getItem(TOUR_KEY)==='1'}catch{return false}}
+function tourCard(){if(tourHidden())return '';return `<section class="card" id="tour"><div class="card-h"><h2>Try these, about 10 minutes</h2><button class="btn sm ghost" data-a="hidetour">Hide</button></div><p style="margin:0 0 12px;color:var(--muted)">This copy is filled with sample students, trainers and workshops so you can see a normal working day. Each step opens the right page.</p>
+  <ol style="margin:0;padding-left:20px;display:grid;gap:8px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))">${TOUR.map(([v,t,d])=>`<li><a href="#${v}" style="font-weight:700">${t}</a><br><span style="color:var(--muted);font-size:13px">${d}</span></li>`).join('')}</ol></section>`}
 function vHome(){
   const t=today();
   const fu=S.enquiries.filter(e=>e.followUp&&e.followUp<=t&&!['Converted','Lost'].includes(e.stage)).sort((a,b)=>a.followUp.localeCompare(b.followUp));
@@ -244,7 +274,7 @@ function vHome(){
   const hour=new Date().getHours();
   const greet=hour<12?'Good morning':hour<17?'Good afternoon':'Good evening';
   const tr=S.trainers.length;
-  return `<div class="grid" style="gap:18px">
+  return `<div class="grid" style="gap:18px">${BACKEND.review?tourCard():''}
   <section class="hello"><div><p style="margin:0;color:var(--muted);font-weight:600">${new Date().toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long'})}</p><h2 style="font:700 22px/1.2 var(--display)">${greet}. Here’s your day.</h2></div>
   <div class="quick w"><button class="btn" data-a="new" data-k="enquiries">+ Enquiry</button><button class="btn" data-a="new" data-k="students">+ Admission</button><button class="btn pri" data-a="new" data-k="payments">Record fee payment</button></div></section>
   <div class="kpis">
@@ -417,6 +447,7 @@ function vSetup(){
   <section class="card"><div class="card-h"><h2>Sample data</h2></div>${ns?`<p style="margin:0 0 12px">${ns} sample records are loaded so you can see how each module works. Remove them before entering real admissions, fees and trainers.</p><div class="acts w" id="sampleActs"><button class="btn danger" data-a="rmsamples">Remove sample data</button></div>`:`<p style="margin:0;color:var(--muted)">No sample records. Everything here is your own data.</p>`}</section>
   <section class="card"><div class="card-h"><h2>Team and roles</h2></div>${BACKEND.team?`<div id="teamList"><p class="empty">Loading team…</p></div>`:`<p style="margin:0;color:var(--muted)">In the live console the owner invites each person by email and picks their role here.</p>`}
   <dl class="kv" style="margin-top:12px;font-size:12.5px"><dt>Owner</dt><dd>Everything, including roles</dd><dt>Admin</dt><dd>Add, edit and delete records</dd><dt>Staff</dt><dd>Add and edit records; cannot delete</dd><dt>Viewer</dt><dd>Read only</dd></dl></section>
+  ${BACKEND.audit?`<section class="card"><div class="card-h"><h2>Recent changes</h2></div><p style="margin:0 0 10px;color:var(--muted);font-size:13px">Who changed students, fees, payouts, trainers and corporate workshops. Only admins and the owner see this.</p><div id="auditList"><p class="empty">Loading…</p></div></section>`:''}
   <section class="card"><div class="card-h"><h2>Records</h2></div><dl class="kv">${COLS.map(k=>`<dt>${NOUN[k][0].toUpperCase()+NOUN[k].slice(1)}s</dt><dd class="num">${S[k].length}</dd>`).join('')}</dl><div class="acts" style="margin-top:12px"><button class="btn sm" data-a="backup">Download all data (Excel)</button></div></section>
   </div></div>`;
 }
@@ -786,6 +817,7 @@ document.addEventListener('click',async ev=>{
   const el=ev.target.closest('[data-a]');
   if(!el)return;
   const a=el.dataset.a,k=el.dataset.k,id=el.dataset.id,v=el.dataset.v;
+  if(a==='hidetour'){try{localStorage.setItem(TOUR_KEY,'1')}catch{}render();return}
   if(['stage','progfilter','monthfilter','attdate','impmap','atttick','doc','impdup','impfile','setrole'].includes(a))return; // handled on change
   switch(a){
     case 'new':openForm(k);break;

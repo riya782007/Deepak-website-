@@ -41,13 +41,21 @@ function load() {
   return freshStore();
 }
 
-export function demoBackend() {
+const AUDITED = new Set(['students', 'payments', 'payouts', 'trainers', 'engagements']);
+
+export function demoBackend({review = false} = {}) {
   let store = load();
   const subs = {};
   const persist = () => { try { localStorage.setItem(KEY, JSON.stringify(store)); } catch {} };
   const snap = c => ({docs: Object.entries(store[c] || {}).map(([id, d]) => ({id, data: () => d}))});
   const fire = c => queueMicrotask(() => (subs[c] || []).forEach(fn => fn()));
   const clone = d => JSON.parse(JSON.stringify(d));
+  // Same record of changes the live API keeps, so the Recent changes panel can be tried here.
+  const log = (c, action, before, after) => {
+    if (!AUDITED.has(c)) return;
+    (store._audit ||= []).push({at: new Date().toISOString(), email: 'You', action, coll: c, before: before ? JSON.stringify(before) : null, after: after ? JSON.stringify(after) : null});
+    store._audit = store._audit.slice(-200);
+  };
 
   const collection = c => ({
     onSnapshot(cb) {
@@ -58,12 +66,12 @@ export function demoBackend() {
     },
     async add(d) {
       const id = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random()).replace(/-/g, '').slice(0, 20);
-      (store[c] ||= {})[id] = clone(d); persist(); fire(c); return {id};
+      (store[c] ||= {})[id] = clone(d); log(c, 'insert', null, d); persist(); fire(c); return {id};
     },
     doc: id => ({
-      async update(patch) { if (!store[c]?.[id]) throw {code: 'not_found'}; store[c][id] = deepMerge(store[c][id], clone(patch)); persist(); fire(c); },
-      async set(d) { (store[c] ||= {})[id] = clone(d); persist(); fire(c); },
-      async delete() { delete store[c][id]; persist(); fire(c); }
+      async update(patch) { if (!store[c]?.[id]) throw {code: 'not_found'}; const before = store[c][id]; store[c][id] = deepMerge(before, clone(patch)); log(c, 'update', before, store[c][id]); persist(); fire(c); },
+      async set(d) { const before = store[c]?.[id]; (store[c] ||= {})[id] = clone(d); log(c, before ? 'update' : 'insert', before, d); persist(); fire(c); },
+      async delete() { log(c, 'delete', store[c][id], null); delete store[c][id]; persist(); fire(c); }
     })
   });
 
@@ -81,7 +89,8 @@ export function demoBackend() {
   };
 
   return {
-    mode: 'demo', role: 'owner', me: {id: 'demo', name: 'Demo user'}, db, team: null,
-    reset() { try { localStorage.removeItem(KEY); } catch {} location.reload(); }
+    mode: 'demo', review, role: 'owner', me: {id: 'demo', name: review ? 'Reviewer' : 'Demo user'}, db, team: null,
+    audit: {list: async () => [...(store._audit || [])].reverse()},
+    reset() { try { localStorage.removeItem(KEY); localStorage.removeItem('sb-review-tour-hidden'); } catch {} location.reload(); }
   };
 }
