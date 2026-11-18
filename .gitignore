@@ -4,3 +4,6 @@ dist/
 !.env.example
 test-results/
 .qa/
+.env.local
+.env
+build/

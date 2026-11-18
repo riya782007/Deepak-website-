@@ -1,0 +1,86 @@
+name: Deploy to AWS
+
+# Builds the website and console and publishes them, plus the console API code.
+# AWS access is short-lived (OpenID Connect), so no keys are stored in GitHub.
+# The role ARN below is the stack output DeployRoleArn. It is not a secret: AWS only lets
+# this repository's main and admin-console branches use it (infra/template.yaml).
+on:
+  push:
+    branches: [main, admin-console]
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+env:
+  STACK: soft-binomials
+  AWS_REGION: ap-south-1
+  AWS_ROLE_ARN: arn:aws:iam::777539904420:role/sb-github-deploy
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm test
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ env.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Read stack outputs
+        run: |
+          out() { aws cloudformation describe-stacks --stack-name "$STACK" --query "Stacks[0].Outputs[?OutputKey=='$1'].OutputValue" --output text; }
+          {
+            echo "API_URL=$(out ApiUrl)"
+            echo "CLIENT_ID=$(out UserPoolClientId)"
+            echo "BUCKET=$(out SiteBucketName)"
+            echo "DISTRIBUTION=$(out DistributionId)"
+            echo "SITE_URL=$(out SiteUrl)"
+          } >> "$GITHUB_ENV"
+
+      - name: Update the console API
+        run: |
+          (cd infra/api && zip -q -r ../../api.zip .)
+          aws lambda update-function-code --function-name sb-console-api --zip-file fileb://api.zip --query LastUpdateStatus --output text
+
+      - name: Build
+        run: npm run build
+        env:
+          VITE_CONSOLE_API_URL: ${{ env.API_URL }}
+          VITE_AWS_REGION: ${{ env.AWS_REGION }}
+          VITE_COGNITO_CLIENT_ID: ${{ env.CLIENT_ID }}
+
+      - name: Publish
+        run: |
+          aws s3 sync dist/assets "s3://$BUCKET/assets" --cache-control "public,max-age=31536000,immutable"
+          aws s3 sync dist "s3://$BUCKET" --delete --exclude "assets/*" --exclude "media/*" --cache-control "public,max-age=0,must-revalidate"
+          aws cloudfront create-invalidation --distribution-id "$DISTRIBUTION" --paths "/*" --query Invalidation.Status --output text
+          echo "Published to $SITE_URL" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Check the live site
+        run: |
+          code() { curl -s -o /dev/null -w "%{http_code}" "$@"; }
+          fail=0
+          check() { got=$(code "${@:3}"); if [ "$got" = "$2" ]; then echo "ok   $2 $1"; else echo "FAIL $1: expected $2, got $got"; fail=1; fi; }
+          for p in / /about/ /services/ /contact/ /admin/ /demo/; do check "$p" 200 "$SITE_URL$p"; done
+          check "missing page" 404 "$SITE_URL/no-such-page/"
+          check "API without sign-in" 401 "${API_URL%/}/me"
+          origin=$(curl -s -D - -o /dev/null -X OPTIONS "${API_URL%/}/docs" -H "Origin: $SITE_URL" -H "Access-Control-Request-Method: GET" -H "Access-Control-Request-Headers: authorization" | tr -d '\r' | awk -F': ' 'tolower($1)=="access-control-allow-origin"{print $2}')
+          if [ "$origin" = "$SITE_URL" ]; then echo "ok   API accepts calls from the site"; else echo "FAIL CORS origin: '$origin'"; fail=1; fi
+          exit $fail

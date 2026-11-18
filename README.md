@@ -35,3 +35,7 @@ The final-touch layer is src/delight.css: pastel gradient heroes with drifting c
 Shared visual refinements live in src/polish.css; navigation, search, filters and motion live in src/experience.js. Service category and search state are stored in the URL so filtered links can be shared and refreshed. Service pages preserve their selected service when opening an enquiry. Related services favour the same group.
 
 Entrance animations use the native Web Animations API with IntersectionObserver and run once per element. Content stays visible without animation support. CSS and JavaScript respect prefers-reduced-motion, including preference changes during a visit. The mobile navigation supports Escape, outside click and keyboard focus dismissal.
+
+## Admin console
+
+Staff operations console at `/admin/`: enquiries, admissions, fees and receipts, batches and attendance, trainers and payouts, corporate workshops, Excel import and export. It runs in demo mode until it is deployed to AWS (Mumbai) with `infra/deploy.sh`; see [admin/README.md](admin/README.md) for setup and the running-cost breakdown. `npm test` checks the API's permissions.

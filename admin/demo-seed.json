@@ -1,0 +1,1542 @@
+{
+ "programmes": [
+  {
+   "id": "p_mscit",
+   "name": "MS-CIT",
+   "track": "IT course",
+   "duration": "3 months",
+   "fee": 5500,
+   "mode": "Classroom",
+   "description": "MKCL certificate course in computer basics and digital literacy.",
+   "sample": true,
+   "createdAt": 1794470400000,
+   "updatedAt": 1794470400000
+  },
+  {
+   "id": "p_ccat",
+   "name": "C-CAT preparation",
+   "track": "IT course",
+   "duration": "8 weeks",
+   "fee": 9500,
+   "mode": "Hybrid",
+   "description": "Preparation for the C-DAC Common Admission Test.",
+   "sample": true,
+   "createdAt": 1794470400000,
+   "updatedAt": 1794470400000
+  },
+  {
+   "id": "p_pgcpac",
+   "name": "PG-CP in Advanced Computing",
+   "track": "IT course",
+   "duration": "6 months",
+   "fee": 92000,
+   "mode": "Classroom",
+   "description": "C-DAC post-graduate certificate programme.",
+   "sample": true,
+   "createdAt": 1794470400000,
+   "updatedAt": 1794470400000
+  },
+  {
+   "id": "p_ccst",
+   "name": "Software Testing (CCST)",
+   "track": "IT course",
+   "duration": "3 months",
+   "fee": 26000,
+   "mode": "Classroom",
+   "description": "Manual and automated testing with projects.",
+   "sample": true,
+   "createdAt": 1794470400000,
+   "updatedAt": 1794470400000
+  },
+  {
+   "id": "p_tally",
+   "name": "Tally with GST",
+   "track": "IT course",
+   "duration": "2 months",
+   "fee": 8000,
+   "mode": "Classroom",
+   "description": "Accounting, inventory and GST returns in Tally.",
+   "sample": true,
+   "createdAt": 1794470400000,
+   "updatedAt": 1794470400000
+  },
+  {
+   "id": "p_autocad",
+   "name": "AutoCAD",
+   "track": "IT course",
+   "duration": "2 months",
+   "fee": 9000,
+   "mode": "Classroom",
+   "description": "2D drafting and 3D modelling.",
+   "sample": true,
+   "createdAt": 1794470400000,
+   "updatedAt": 1794470400000
+  },
+  {
+   "id": "p_wps",
+   "name": "Winning Presentation Skills",
+   "track": "Corporate workshop",
+   "duration": "2 days",
+   "fee": 80000,
+   "mode": "On-site at client",
+   "description": "Structure, delivery and visuals for confident presentations.",
+   "sample": true,
+   "createdAt": 1794470400000,
+   "updatedAt": 1794470400000
+  },
+  {
+   "id": "p_lead",
+   "name": "Business Leadership",
+   "track": "Corporate workshop",
+   "duration": "3 days",
+   "fee": 135000,
+   "mode": "On-site at client",
+   "description": "For managers with 3+ years moving into leadership roles.",
+   "sample": true,
+   "createdAt": 1794470400000,
+   "updatedAt": 1794470400000
+  },
+  {
+   "id": "p_time",
+   "name": "Time Management and Goal Setting",
+   "track": "Corporate workshop",
+   "duration": "1 day",
+   "fee": 40000,
+   "mode": "On-site at client",
+   "description": "Priorities, planning and deadlines for busy teams.",
+   "sample": true,
+   "createdAt": 1794470400000,
+   "updatedAt": 1794470400000
+  },
+  {
+   "id": "p_bschool",
+   "name": "US B-school application guidance",
+   "track": "Student service",
+   "duration": "3 months",
+   "fee": 60000,
+   "mode": "Hybrid",
+   "description": "Essays, recommendations and resume for US MBA and Masters applications.",
+   "sample": true,
+   "createdAt": 1794470400000,
+   "updatedAt": 1794470400000
+  },
+  {
+   "id": "p_tna",
+   "name": "Training Need Analysis",
+   "track": "HR consulting",
+   "duration": "4 weeks",
+   "fee": 150000,
+   "mode": "On-site at client",
+   "description": "Business needs, job and task analysis, and a recommended training plan.",
+   "sample": true,
+   "createdAt": 1794470400000,
+   "updatedAt": 1794470400000
+  },
+  {
+   "id": "p_home",
+   "name": "Development programme for homemakers",
+   "track": "Personal development",
+   "duration": "6 weeks",
+   "fee": 6000,
+   "mode": "Classroom",
+   "description": "Confidence, communication and life skills.",
+   "sample": true,
+   "createdAt": 1794470400000,
+   "updatedAt": 1794470400000
+  }
+ ],
+ "trainers": [
+  {
+   "id": "t_priya",
+   "name": "Priya Nair",
+   "phone": "9820011122",
+   "email": "priya@example.com",
+   "city": "Mumbai",
+   "expertise": [
+    "Presentation skills",
+    "Communication",
+    "Business writing"
+   ],
+   "experience": 12,
+   "rateType": "Per day",
+   "rate": 12000,
+   "stage": "Active",
+   "rating": 4.8,
+   "docs": [
+    "CV",
+    "PAN",
+    "Aadhaar",
+    "Bank details",
+    "Signed agreement",
+    "Demo video"
+   ],
+   "notes": "Strong with senior audiences.",
+   "sample": true,
+   "createdAt": 1794470400000,
+   "updatedAt": 1794470400000
+  },
+  {
+   "id": "t_rahul",
+   "name": "Rahul Kulkarni",
+   "phone": "9890022233",
+   "email": "rahul@example.com",
+   "city": "Nagpur",
+   "expertise": [
+    "C-CAT",
+    "C programming",
+    "Data structures"
+   ],
+   "experience": 8,
+   "rateType": "Per hour",
+   "rate": 900,
+   "stage": "Active",
+   "rating": 4.6,
+   "docs": [
+    "CV",
+    "PAN",
+    "Aadhaar",
+    "Bank details",
+    "Signed agreement"
+   ],
+   "notes": "Available evenings and Saturdays.",
+   "sample": true,
+   "createdAt": 1794470400000,
+   "updatedAt": 1794470400000
+  },
+  {
+   "id": "t_sneha",
+   "name": "Sneha Joshi",
+   "phone": "9823033344",
+   "email": "sneha@example.com",
+   "city": "Nagpur",
+   "expertise": [
+    "MS-CIT",
+    "Tally",
+    "Excel"
+   ],
+   "experience": 6,
+   "rateType": "Per batch",
+   "rate": 15000,
+   "stage": "Active",
+   "rating": 4.5,
+   "docs": [
+    "CV",
+    "PAN",
+    "Aadhaar",
+    "Bank details",
+    "Signed agreement",
+    "Demo video"
+   ],
+   "notes": "",
+   "sample": true,
+   "createdAt": 1794470400000,
+   "updatedAt": 1794470400000
+  },
+  {
+   "id": "t_arvind",
+   "name": "Arvind Menon",
+   "phone": "9819044455",
+   "email": "arvind@example.com",
+   "city": "Mumbai",
+   "expertise": [
+    "Leadership",
+    "Coaching and mentoring",
+    "Team building"
+   ],
+   "experience": 18,
+   "rateType": "Per day",
+   "rate": 18000,
+   "stage": "Approved",
+   "rating": 4.9,
+   "docs": [
+    "CV",
+    "PAN",
+    "Demo video"
+   ],
+   "notes": "Demo rated excellent. Agreement and bank details pending.",
+   "sample": true,
+   "createdAt": 1794470400000,
+   "updatedAt": 1794470400000
+  },
+  {
+   "id": "t_farah",
+   "name": "Farah Shaikh",
+   "phone": "9970055566",
+   "email": "farah@example.com",
+   "city": "Nagpur",
+   "expertise": [
+    "Software testing",
+    "Selenium"
+   ],
+   "experience": 5,
+   "rateType": "Per session",
+   "rate": 2500,
+   "stage": "Demo session",
+   "rating": null,
+   "docs": [
+    "CV"
+   ],
+   "notes": "Demo session booked for 2026-11-15 at 4 pm.",
+   "sample": true,
+   "createdAt": 1794470400000,
+   "updatedAt": 1794470400000
+  },
+  {
+   "id": "t_meera",
+   "name": "Meera Iyer",
+   "phone": "9833066677",
+   "email": "meera@example.com",
+   "city": "Mumbai",
+   "expertise": [
+    "Essay coaching",
+    "SOP writing",
+    "Resumes"
+   ],
+   "experience": 10,
+   "rateType": "Per session",
+   "rate": 3000,
+   "stage": "Screening",
+   "rating": null,
+   "docs": [
+    "CV"
+   ],
+   "notes": "Referred by a past student. Check writing samples.",
+   "sample": true,
+   "createdAt": 1794470400000,
+   "updatedAt": 1794470400000
+  },
+  {
+   "id": "t_kunal",
+   "name": "Kunal Deshmukh",
+   "phone": "9850077788",
+   "email": "kunal@example.com",
+   "city": "Nagpur",
+   "expertise": [
+    "AutoCAD",
+    "Revit"
+   ],
+   "experience": 4,
+   "rateType": "Per batch",
+   "rate": 14000,
+   "stage": "Applied",
+   "rating": null,
+   "docs": [],
+   "notes": "Applied through website careers form.",
+   "sample": true,
+   "createdAt": 1794470400000,
+   "updatedAt": 1794470400000
+  }
+ ],
+ "batches": [
+  {
+   "id": "b_mscit",
+   "code": "MSCIT-NOV26-MORNING",
+   "programmeId": "p_mscit",
+   "trainerId": "t_sneha",
+   "centre": "Nagpur",
+   "start": "2026-11-02",
+   "end": "2027-01-29",
+   "days": [
+    "Mon",
+    "Wed",
+    "Fri"
+   ],
+   "time": "10:00–12:00",
+   "capacity": 25,
+   "status": "Running",
+   "attendance": {
+    "2026-11-02": [
+     "s1",
+     "s2",
+     "s5"
+    ],
+    "2026-11-04": [
+     "s1",
+     "s3",
+     "s4",
+     "s5"
+    ],
+    "2026-11-06": [
+     "s1",
+     "s2",
+     "s3",
+     "s4",
+     "s5"
+    ],
+    "2026-11-09": [
+     "s1",
+     "s2",
+     "s3",
+     "s4",
+     "s5"
+    ],
+    "2026-11-11": [
+     "s1",
+     "s2",
+     "s3",
+     "s4",
+     "s5"
+    ]
+   },
+   "sample": true,
+   "createdAt": 1794470400000,
+   "updatedAt": 1794470400000
+  },
+  {
+   "id": "b_ccat",
+   "code": "CCAT-DEC26-EVENING",
+   "programmeId": "p_ccat",
+   "trainerId": "t_rahul",
+   "centre": "Nagpur",
+   "start": "2026-11-08",
+   "end": "2027-01-03",
+   "days": [
+    "Mon",
+    "Tue",
+    "Wed",
+    "Thu",
+    "Fri"
+   ],
+   "time": "17:30–19:30",
+   "capacity": 30,
+   "status": "Running",
+   "attendance": {
+    "2026-11-09": [
+     "s6",
+     "s7",
+     "s8"
+    ],
+    "2026-11-10": [
+     "s6",
+     "s7",
+     "s8",
+     "s9"
+    ],
+    "2026-11-11": [
+     "s6",
+     "s7",
+     "s8"
+    ]
+   },
+   "sample": true,
+   "createdAt": 1794470400000,
+   "updatedAt": 1794470400000
+  },
+  {
+   "id": "b_tally",
+   "code": "TALLY-SEP26",
+   "programmeId": "p_tally",
+   "trainerId": "t_sneha",
+   "centre": "Nagpur",
+   "start": "2026-09-01",
+   "end": "2026-10-31",
+   "days": [
+    "Tue",
+    "Thu",
+    "Sat"
+   ],
+   "time": "11:00–13:00",
+   "capacity": 20,
+   "status": "Completed",
+   "attendance": {
+    "2026-09-01": [
+     "s10",
+     "s11"
+    ],
+    "2026-09-03": [
+     "s10",
+     "s11",
+     "s12"
+    ],
+    "2026-09-05": [
+     "s11",
+     "s12"
+    ],
+    "2026-09-08": [
+     "s10",
+     "s12"
+    ],
+    "2026-09-10": [
+     "s10",
+     "s11",
+     "s12"
+    ],
+    "2026-09-12": [
+     "s10",
+     "s11",
+     "s12"
+    ],
+    "2026-09-15": [
+     "s10",
+     "s11",
+     "s12"
+    ],
+    "2026-09-17": [
+     "s10",
+     "s11",
+     "s12"
+    ],
+    "2026-09-19": [
+     "s10",
+     "s11",
+     "s12"
+    ],
+    "2026-09-22": [
+     "s11"
+    ],
+    "2026-09-24": [
+     "s10",
+     "s11",
+     "s12"
+    ],
+    "2026-09-26": [
+     "s10",
+     "s12"
+    ],
+    "2026-09-29": [
+     "s10",
+     "s11",
+     "s12"
+    ],
+    "2026-10-01": [
+     "s10",
+     "s11"
+    ],
+    "2026-10-03": [
+     "s10",
+     "s11",
+     "s12"
+    ],
+    "2026-10-06": [
+     "s10",
+     "s12"
+    ],
+    "2026-10-08": [
+     "s10",
+     "s11",
+     "s12"
+    ],
+    "2026-10-10": [
+     "s10",
+     "s11",
+     "s12"
+    ],
+    "2026-10-13": [
+     "s10",
+     "s11",
+     "s12"
+    ],
+    "2026-10-15": [
+     "s10",
+     "s11",
+     "s12"
+    ],
+    "2026-10-17": [
+     "s11",
+     "s12"
+    ],
+    "2026-10-20": [
+     "s10",
+     "s11",
+     "s12"
+    ],
+    "2026-10-22": [
+     "s10",
+     "s11",
+     "s12"
+    ],
+    "2026-10-24": [
+     "s10",
+     "s11",
+     "s12"
+    ],
+    "2026-10-27": [
+     "s10",
+     "s11",
+     "s12"
+    ],
+    "2026-10-29": [
+     "s10",
+     "s11",
+     "s12"
+    ],
+    "2026-10-31": [
+     "s10",
+     "s11",
+     "s12"
+    ]
+   },
+   "sample": true,
+   "createdAt": 1794470400000,
+   "updatedAt": 1794470400000
+  },
+  {
+   "id": "b_ccst",
+   "code": "CCST-JAN27",
+   "programmeId": "p_ccst",
+   "trainerId": "t_farah",
+   "centre": "Nagpur",
+   "start": "2027-01-11",
+   "end": "2027-04-09",
+   "days": [
+    "Mon",
+    "Wed",
+    "Fri"
+   ],
+   "time": "14:00–17:00",
+   "capacity": 24,
+   "status": "Upcoming",
+   "attendance": {},
+   "sample": true,
+   "createdAt": 1794470400000,
+   "updatedAt": 1794470400000
+  }
+ ],
+ "students": [
+  {
+   "id": "s1",
+   "code": "SB2610-100",
+   "name": "Aarav Wankhede",
+   "phone": "9853464097",
+   "email": "aarav.wankhede@example.com",
+   "education": "BE Computer, final year",
+   "guardian": "Mrs. Wankhede",
+   "guardianPhone": "9497366946",
+   "programmeId": "p_mscit",
+   "batchId": "b_mscit",
+   "centre": "Nagpur",
+   "joinedOn": "2026-10-31",
+   "feeTotal": 5500,
+   "discount": 0,
+   "nextDue": "2026-11-10",
+   "status": "Active",
+   "docs": [
+    "Admission form",
+    "ID proof",
+    "Photo"
+   ],
+   "notes": "",
+   "sample": true,
+   "createdAt": 1794470400000,
+   "updatedAt": 1794470400000
+  },
+  {
+   "id": "s2",
+   "code": "SB2611-101",
+   "name": "Ishita Bhoyar",
+   "phone": "9881924865",
+   "email": "ishita.bhoyar@example.com",
+   "education": "B.Com, 2nd year",
+   "guardian": "Mrs. Bhoyar",
+   "guardianPhone": "9488220482",
+   "programmeId": "p_mscit",
+   "batchId": "b_mscit",
+   "centre": "Nagpur",
+   "joinedOn": "2026-11-01",
+   "feeTotal": 5500,
+   "discount": 500,
+   "nextDue": "",
+   "status": "Active",
+   "docs": [
+    "Admission form",
+    "ID proof",
+    "Photo",
+    "Marksheet"
+   ],
+   "notes": "",
+   "sample": true,
+   "createdAt": 1794470400000,
+   "updatedAt": 1794470400000
+  },
+  {
+   "id": "s3",
+   "code": "SB2611-102",
+   "name": "Rohan Thakre",
+   "phone": "9838816302",
+   "email": "rohan.thakre@example.com",
+   "education": "B.Com, 2nd year",
+   "guardian": "Mr. Thakre",
+   "guardianPhone": "9468202938",
+   "programmeId": "p_mscit",
+   "batchId": "b_mscit",
+   "centre": "Nagpur",
+   "joinedOn": "2026-11-02",
+   "feeTotal": 5500,
+   "discount": 0,
+   "nextDue": "2026-11-17",
+   "status": "Active",
+   "docs": [
+    "Admission form",
+    "ID proof",
+    "Photo",
+    "Marksheet"
+   ],
+   "notes": "",
+   "sample": true,
+   "createdAt": 1794470400000,
+   "updatedAt": 1794470400000
+  },
+  {
+   "id": "s4",
+   "code": "SB2611-103",
+   "name": "Sakshi Deshpande",
+   "phone": "9822175294",
+   "email": "sakshi.deshpande@example.com",
+   "education": "MBA aspirant, 4 yrs work experience",
+   "guardian": "Mrs. Deshpande",
+   "guardianPhone": "9417933677",
+   "programmeId": "p_mscit",
+   "batchId": "b_mscit",
+   "centre": "Nagpur",
+   "joinedOn": "2026-11-03",
+   "feeTotal": 5500,
+   "discount": 0,
+   "nextDue": "",
+   "status": "Active",
+   "docs": [
+    "Admission form",
+    "ID proof",
+    "Photo"
+   ],
+   "notes": "",
+   "sample": true,
+   "createdAt": 1794470400000,
+   "updatedAt": 1794470400000
+  },
+  {
+   "id": "s5",
+   "code": "SB2611-104",
+   "name": "Vedant Raut",
+   "phone": "9839962626",
+   "email": "vedant.raut@example.com",
+   "education": "MBA aspirant, 4 yrs work experience",
+   "guardian": "Mr. Raut",
+   "guardianPhone": "9487457446",
+   "programmeId": "p_mscit",
+   "batchId": "b_mscit",
+   "centre": "Nagpur",
+   "joinedOn": "2026-11-04",
+   "feeTotal": 5500,
+   "discount": 0,
+   "nextDue": "2026-11-07",
+   "status": "Active",
+   "docs": [
+    "Admission form",
+    "ID proof",
+    "Photo",
+    "Marksheet"
+   ],
+   "notes": "",
+   "sample": true,
+   "createdAt": 1794470400000,
+   "updatedAt": 1794470400000
+  },
+  {
+   "id": "s6",
+   "code": "SB2610-105",
+   "name": "Tanvi Gupta",
+   "phone": "9816655764",
+   "email": "tanvi.gupta@example.com",
+   "education": "BE Computer, final year",
+   "guardian": "Mr. Gupta",
+   "guardianPhone": "9484714297",
+   "programmeId": "p_ccat",
+   "batchId": "b_ccat",
+   "centre": "Nagpur",
+   "joinedOn": "2026-10-31",
+   "feeTotal": 9500,
+   "discount": 1000,
+   "nextDue": "2026-11-12",
+   "status": "Active",
+   "docs": [
+    "Admission form",
+    "ID proof",
+    "Photo",
+    "Marksheet"
+   ],
+   "notes": "",
+   "sample": true,
+   "createdAt": 1794470400000,
+   "updatedAt": 1794470400000
+  },
+  {
+   "id": "s7",
+   "code": "SB2611-106",
+   "name": "Omkar Meshram",
+   "phone": "9829361589",
+   "email": "omkar.meshram@example.com",
+   "education": "MBA aspirant, 4 yrs work experience",
+   "guardian": "Mr. Meshram",
+   "guardianPhone": "9486626738",
+   "programmeId": "p_ccat",
+   "batchId": "b_ccat",
+   "centre": "Nagpur",
+   "joinedOn": "2026-11-01",
+   "feeTotal": 9500,
+   "discount": 0,
+   "nextDue": "",
+   "status": "Active",
+   "docs": [
+    "Admission form",
+    "ID proof",
+    "Photo"
+   ],
+   "notes": "",
+   "sample": true,
+   "createdAt": 1794470400000,
+   "updatedAt": 1794470400000
+  },
+  {
+   "id": "s8",
+   "code": "SB2611-107",
+   "name": "Pooja Khandelwal",
+   "phone": "9834256684",
+   "email": "pooja.khandelwal@example.com",
+   "education": "B.Com, 2nd year",
+   "guardian": "Mr. Khandelwal",
+   "guardianPhone": "9459982352",
+   "programmeId": "p_ccat",
+   "batchId": "b_ccat",
+   "centre": "Nagpur",
+   "joinedOn": "2026-11-02",
+   "feeTotal": 9500,
+   "discount": 0,
+   "nextDue": "2026-11-26",
+   "status": "Active",
+   "docs": [
+    "Admission form",
+    "ID proof",
+    "Photo",
+    "Marksheet"
+   ],
+   "notes": "",
+   "sample": true,
+   "createdAt": 1794470400000,
+   "updatedAt": 1794470400000
+  },
+  {
+   "id": "s9",
+   "code": "SB2611-108",
+   "name": "Yash Agrawal",
+   "phone": "9818427393",
+   "email": "yash.agrawal@example.com",
+   "education": "MBA aspirant, 4 yrs work experience",
+   "guardian": "Mr. Agrawal",
+   "guardianPhone": "9493082061",
+   "programmeId": "p_ccat",
+   "batchId": "b_ccat",
+   "centre": "Nagpur",
+   "joinedOn": "2026-11-03",
+   "feeTotal": 9500,
+   "discount": 0,
+   "nextDue": "2026-11-11",
+   "status": "Active",
+   "docs": [
+    "Admission form",
+    "ID proof",
+    "Photo",
+    "Marksheet"
+   ],
+   "notes": "",
+   "sample": true,
+   "createdAt": 1794470400000,
+   "updatedAt": 1794470400000
+  },
+  {
+   "id": "s10",
+   "code": "SB2608-109",
+   "name": "Neha Pande",
+   "phone": "9881366283",
+   "email": "neha.pande@example.com",
+   "education": "BCA graduate",
+   "guardian": "Mrs. Pande",
+   "guardianPhone": "9472492024",
+   "programmeId": "p_tally",
+   "batchId": "b_tally",
+   "centre": "Nagpur",
+   "joinedOn": "2026-08-28",
+   "feeTotal": 8000,
+   "discount": 0,
+   "nextDue": "",
+   "status": "Completed",
+   "docs": [
+    "Admission form",
+    "ID proof",
+    "Photo"
+   ],
+   "notes": "",
+   "sample": true,
+   "createdAt": 1794470400000,
+   "updatedAt": 1794470400000
+  },
+  {
+   "id": "s11",
+   "code": "SB2608-110",
+   "name": "Siddhi Kale",
+   "phone": "9834127884",
+   "email": "siddhi.kale@example.com",
+   "education": "BE Computer, final year",
+   "guardian": "Mr. Kale",
+   "guardianPhone": "9487097845",
+   "programmeId": "p_tally",
+   "batchId": "b_tally",
+   "centre": "Nagpur",
+   "joinedOn": "2026-08-28",
+   "feeTotal": 8000,
+   "discount": 0,
+   "nextDue": "",
+   "status": "Completed",
+   "docs": [
+    "Admission form",
+    "ID proof",
+    "Photo",
+    "Marksheet"
+   ],
+   "notes": "",
+   "sample": true,
+   "createdAt": 1794470400000,
+   "updatedAt": 1794470400000
+  },
+  {
+   "id": "s12",
+   "code": "SB2608-111",
+   "name": "Aditya Bansod",
+   "phone": "9856100526",
+   "email": "aditya.bansod@example.com",
+   "education": "BCA graduate",
+   "guardian": "Mrs. Bansod",
+   "guardianPhone": "9491733095",
+   "programmeId": "p_tally",
+   "batchId": "b_tally",
+   "centre": "Nagpur",
+   "joinedOn": "2026-08-28",
+   "feeTotal": 8000,
+   "discount": 800,
+   "nextDue": "",
+   "status": "Completed",
+   "docs": [
+    "Admission form",
+    "ID proof",
+    "Photo",
+    "Marksheet"
+   ],
+   "notes": "",
+   "sample": true,
+   "createdAt": 1794470400000,
+   "updatedAt": 1794470400000
+  },
+  {
+   "id": "s13",
+   "code": "SB2611-112",
+   "name": "Riddhi Joshi",
+   "phone": "9878710461",
+   "email": "riddhi.joshi@example.com",
+   "education": "MBA aspirant, 4 yrs work experience",
+   "guardian": "Mrs. Joshi",
+   "guardianPhone": "9432140838",
+   "programmeId": "p_bschool",
+   "batchId": "",
+   "centre": "Mumbai",
+   "joinedOn": "2026-11-02",
+   "feeTotal": 60000,
+   "discount": 0,
+   "nextDue": "2026-12-02",
+   "status": "Active",
+   "docs": [
+    "Admission form",
+    "ID proof",
+    "Photo"
+   ],
+   "notes": "",
+   "sample": true,
+   "createdAt": 1794470400000,
+   "updatedAt": 1794470400000
+  },
+  {
+   "id": "s14",
+   "code": "SB2611-113",
+   "name": "Harsh Lanjewar",
+   "phone": "9815262308",
+   "email": "harsh.lanjewar@example.com",
+   "education": "B.Com, 2nd year",
+   "guardian": "Mrs. Lanjewar",
+   "guardianPhone": "9455650450",
+   "programmeId": "p_ccst",
+   "batchId": "b_ccst",
+   "centre": "Nagpur",
+   "joinedOn": "2026-11-03",
+   "feeTotal": 26000,
+   "discount": 0,
+   "nextDue": "2026-12-27",
+   "status": "Active",
+   "docs": [
+    "Admission form",
+    "ID proof",
+    "Photo",
+    "Marksheet"
+   ],
+   "notes": "",
+   "sample": true,
+   "createdAt": 1794470400000,
+   "updatedAt": 1794470400000
+  }
+ ],
+ "payments": [
+  {
+   "id": "pay_s1_0",
+   "studentId": "s1",
+   "amount": 3000,
+   "date": "2026-11-02",
+   "mode": "UPI",
+   "ref": "UPI150631",
+   "note": "",
+   "receiptNo": "RC-261102-C940",
+   "sample": true,
+   "createdAt": 1794470400000,
+   "updatedAt": 1794470400000
+  },
+  {
+   "id": "pay_s2_0",
+   "studentId": "s2",
+   "amount": 5000,
+   "date": "2026-11-02",
+   "mode": "Cash",
+   "ref": "",
+   "note": "",
+   "receiptNo": "RC-261102-B619",
+   "sample": true,
+   "createdAt": 1794470400000,
+   "updatedAt": 1794470400000
+  },
+  {
+   "id": "pay_s3_0",
+   "studentId": "s3",
+   "amount": 2500,
+   "date": "2026-11-03",
+   "mode": "UPI",
+   "ref": "UPI538485",
+   "note": "",
+   "receiptNo": "RC-261103-C346",
+   "sample": true,
+   "createdAt": 1794470400000,
+   "updatedAt": 1794470400000
+  },
+  {
+   "id": "pay_s4_0",
+   "studentId": "s4",
+   "amount": 5500,
+   "date": "2026-11-04",
+   "mode": "Bank transfer",
+   "ref": "",
+   "note": "",
+   "receiptNo": "RC-261104-U226",
+   "sample": true,
+   "createdAt": 1794470400000,
+   "updatedAt": 1794470400000
+  },
+  {
+   "id": "pay_s5_0",
+   "studentId": "s5",
+   "amount": 2000,
+   "date": "2026-11-02",
+   "mode": "Cash",
+   "ref": "",
+   "note": "",
+   "receiptNo": "RC-261102-U506",
+   "sample": true,
+   "createdAt": 1794470400000,
+   "updatedAt": 1794470400000
+  },
+  {
+   "id": "pay_s6_0",
+   "studentId": "s6",
+   "amount": 4500,
+   "date": "2026-11-08",
+   "mode": "UPI",
+   "ref": "UPI239643",
+   "note": "",
+   "receiptNo": "RC-261108-K529",
+   "sample": true,
+   "createdAt": 1794470400000,
+   "updatedAt": 1794470400000
+  },
+  {
+   "id": "pay_s7_0",
+   "studentId": "s7",
+   "amount": 9500,
+   "date": "2026-11-08",
+   "mode": "UPI",
+   "ref": "UPI423466",
+   "note": "",
+   "receiptNo": "RC-261108-T935",
+   "sample": true,
+   "createdAt": 1794470400000,
+   "updatedAt": 1794470400000
+  },
+  {
+   "id": "pay_s8_0",
+   "studentId": "s8",
+   "amount": 5000,
+   "date": "2026-11-09",
+   "mode": "Card",
+   "ref": "",
+   "note": "",
+   "receiptNo": "RC-261109-D660",
+   "sample": true,
+   "createdAt": 1794470400000,
+   "updatedAt": 1794470400000
+  },
+  {
+   "id": "pay_s9_0",
+   "studentId": "s9",
+   "amount": 3000,
+   "date": "2026-11-10",
+   "mode": "Cash",
+   "ref": "",
+   "note": "",
+   "receiptNo": "RC-261110-G608",
+   "sample": true,
+   "createdAt": 1794470400000,
+   "updatedAt": 1794470400000
+  },
+  {
+   "id": "pay_s10_0",
+   "studentId": "s10",
+   "amount": 4000,
+   "date": "2026-09-01",
+   "mode": "Cash",
+   "ref": "",
+   "note": "",
+   "receiptNo": "RC-260901-U564",
+   "sample": true,
+   "createdAt": 1794470400000,
+   "updatedAt": 1794470400000
+  },
+  {
+   "id": "pay_s10_1",
+   "studentId": "s10",
+   "amount": 4000,
+   "date": "2026-10-03",
+   "mode": "UPI",
+   "ref": "UPI479146",
+   "note": "",
+   "receiptNo": "RC-261003-K354",
+   "sample": true,
+   "createdAt": 1794470400000,
+   "updatedAt": 1794470400000
+  },
+  {
+   "id": "pay_s11_0",
+   "studentId": "s11",
+   "amount": 8000,
+   "date": "2026-09-01",
+   "mode": "UPI",
+   "ref": "UPI414834",
+   "note": "",
+   "receiptNo": "RC-260901-S606",
+   "sample": true,
+   "createdAt": 1794470400000,
+   "updatedAt": 1794470400000
+  },
+  {
+   "id": "pay_s12_0",
+   "studentId": "s12",
+   "amount": 7200,
+   "date": "2026-09-03",
+   "mode": "Bank transfer",
+   "ref": "",
+   "note": "",
+   "receiptNo": "RC-260903-C220",
+   "sample": true,
+   "createdAt": 1794470400000,
+   "updatedAt": 1794470400000
+  },
+  {
+   "id": "pay_s13_0",
+   "studentId": "s13",
+   "amount": 30000,
+   "date": "2026-10-13",
+   "mode": "Bank transfer",
+   "ref": "",
+   "note": "",
+   "receiptNo": "RC-261013-L255",
+   "sample": true,
+   "createdAt": 1794470400000,
+   "updatedAt": 1794470400000
+  },
+  {
+   "id": "pay_s13_1",
+   "studentId": "s13",
+   "amount": 15000,
+   "date": "2026-11-11",
+   "mode": "Bank transfer",
+   "ref": "",
+   "note": "",
+   "receiptNo": "RC-261111-R531",
+   "sample": true,
+   "createdAt": 1794470400000,
+   "updatedAt": 1794470400000
+  },
+  {
+   "id": "pay_s14_0",
+   "studentId": "s14",
+   "amount": 10000,
+   "date": "2026-11-06",
+   "mode": "UPI",
+   "ref": "UPI829070",
+   "note": "",
+   "receiptNo": "RC-261106-M708",
+   "sample": true,
+   "createdAt": 1794470400000,
+   "updatedAt": 1794470400000
+  }
+ ],
+ "enquiries": [
+  {
+   "id": "e1",
+   "name": "Kavya Pathak",
+   "phone": "9881200011",
+   "email": "",
+   "kind": "Student course",
+   "programmeId": "p_ccat",
+   "source": "Website",
+   "stage": "New",
+   "centre": "Nagpur",
+   "followUp": "2026-11-12",
+   "notes": "Asked about weekend batch.",
+   "sample": true,
+   "createdAt": 1794470400000,
+   "updatedAt": 1794470400000
+  },
+  {
+   "id": "e2",
+   "name": "Nikhil Sharma",
+   "phone": "9881200022",
+   "email": "",
+   "kind": "Student course",
+   "programmeId": "p_mscit",
+   "source": "Walk-in",
+   "stage": "Contacted",
+   "centre": "Nagpur",
+   "followUp": "2026-11-11",
+   "notes": "Visited with parent. Wants morning batch.",
+   "sample": true,
+   "createdAt": 1794470400000,
+   "updatedAt": 1794470400000
+  },
+  {
+   "id": "e3",
+   "name": "Anjali Rao",
+   "phone": "9881200033",
+   "email": "",
+   "kind": "Student services",
+   "programmeId": "p_bschool",
+   "source": "Referral",
+   "stage": "Counselling",
+   "centre": "Mumbai",
+   "followUp": "2026-11-12",
+   "notes": "GMAT 690. Targeting Fall 2027 intake.",
+   "sample": true,
+   "createdAt": 1794470400000,
+   "updatedAt": 1794470400000
+  },
+  {
+   "id": "e4",
+   "name": "Northwind Pharma (HR)",
+   "phone": "9881200044",
+   "email": "",
+   "kind": "Corporate training",
+   "programmeId": "p_wps",
+   "source": "Corporate client",
+   "stage": "Contacted",
+   "centre": "Mumbai",
+   "followUp": "2026-11-14",
+   "notes": "Wants a 2-day workshop for 25 sales managers in December.",
+   "sample": true,
+   "createdAt": 1794470400000,
+   "updatedAt": 1794470400000
+  },
+  {
+   "id": "e5",
+   "name": "Deepti Wagh",
+   "phone": "9881200055",
+   "email": "",
+   "kind": "Personal development",
+   "programmeId": "p_home",
+   "source": "Social media",
+   "stage": "New",
+   "centre": "Nagpur",
+   "followUp": "2026-11-09",
+   "notes": "",
+   "sample": true,
+   "createdAt": 1794470400000,
+   "updatedAt": 1794470400000
+  },
+  {
+   "id": "e6",
+   "name": "Manish Tiwari",
+   "phone": "9881200066",
+   "email": "",
+   "kind": "Trainer application",
+   "programmeId": "",
+   "source": "Website",
+   "stage": "New",
+   "centre": "Nagpur",
+   "followUp": "2026-11-13",
+   "notes": "Corporate trainer, 9 years in sales training.",
+   "sample": true,
+   "createdAt": 1794470400000,
+   "updatedAt": 1794470400000
+  },
+  {
+   "id": "e7",
+   "name": "Sameer Kale",
+   "phone": "9881200077",
+   "email": "",
+   "kind": "Student course",
+   "programmeId": "p_autocad",
+   "source": "JustDial",
+   "stage": "Lost",
+   "centre": "Nagpur",
+   "followUp": "",
+   "notes": "Joined another institute.",
+   "sample": true,
+   "createdAt": 1794470400000,
+   "updatedAt": 1794470400000
+  },
+  {
+   "id": "e8",
+   "name": "Ritika Bansod",
+   "phone": "9881200088",
+   "email": "",
+   "kind": "Student course",
+   "programmeId": "p_mscit",
+   "source": "Phone call",
+   "stage": "Converted",
+   "centre": "Nagpur",
+   "followUp": "",
+   "notes": "Admitted to MSCIT-NOV26-MORNING.",
+   "sample": true,
+   "createdAt": 1794470400000,
+   "updatedAt": 1794470400000
+  },
+  {
+   "id": "e9",
+   "name": "Sahyadri Engineering",
+   "phone": "9881200099",
+   "email": "",
+   "kind": "HR consulting",
+   "programmeId": "p_tna",
+   "source": "Referral",
+   "stage": "Counselling",
+   "centre": "Mumbai",
+   "followUp": "2026-11-16",
+   "notes": "Plant of 400 staff. Wants TNA before next year's training calendar.",
+   "sample": true,
+   "createdAt": 1794470400000,
+   "updatedAt": 1794470400000
+  }
+ ],
+ "engagements": [
+  {
+   "id": "g1",
+   "client": "Northwind Pharma",
+   "contact": "Ms. Kiran Shah",
+   "contactPhone": "9822110011",
+   "programmeId": "p_wps",
+   "trainerId": "t_priya",
+   "start": "2026-12-08",
+   "days": 2,
+   "participants": 25,
+   "venue": "Client office, Andheri",
+   "fee": 80000,
+   "gst": 18,
+   "status": "Confirmed",
+   "invoiceNo": "",
+   "feedback": null,
+   "notes": "",
+   "sample": true,
+   "createdAt": 1794470400000,
+   "updatedAt": 1794470400000
+  },
+  {
+   "id": "g2",
+   "client": "Kaveri Finance Ltd",
+   "contact": "Mr. Rajesh Iyer",
+   "contactPhone": "9822110022",
+   "programmeId": "p_lead",
+   "trainerId": "t_arvind",
+   "start": "2026-11-21",
+   "days": 3,
+   "participants": 18,
+   "venue": "Hotel, Powai",
+   "fee": 135000,
+   "gst": 18,
+   "status": "Confirmed",
+   "invoiceNo": "",
+   "feedback": null,
+   "notes": "Pre-workshop test sent to participants.",
+   "sample": true,
+   "createdAt": 1794470400000,
+   "updatedAt": 1794470400000
+  },
+  {
+   "id": "g3",
+   "client": "Vidya Public School",
+   "contact": "Mrs. Anita Desai",
+   "contactPhone": "9822110033",
+   "programmeId": "p_time",
+   "trainerId": "t_priya",
+   "start": "2026-10-25",
+   "days": 1,
+   "participants": 40,
+   "venue": "School auditorium",
+   "fee": 40000,
+   "gst": 18,
+   "status": "Invoiced",
+   "invoiceNo": "SB/26-27/014",
+   "feedback": 4.6,
+   "notes": "Post-workshop action plans shared.",
+   "sample": true,
+   "createdAt": 1794470400000,
+   "updatedAt": 1794470400000
+  },
+  {
+   "id": "g4",
+   "client": "Sahyadri Engineering",
+   "contact": "Mr. Vivek Patil",
+   "contactPhone": "9822110044",
+   "programmeId": "p_wps",
+   "trainerId": "t_priya",
+   "start": "2026-09-28",
+   "days": 2,
+   "participants": 22,
+   "venue": "Plant training hall",
+   "fee": 80000,
+   "gst": 18,
+   "status": "Paid",
+   "invoiceNo": "SB/26-27/009",
+   "feedback": 4.7,
+   "notes": "",
+   "sample": true,
+   "createdAt": 1794470400000,
+   "updatedAt": 1794470400000
+  },
+  {
+   "id": "g5",
+   "client": "Orion Logistics",
+   "contact": "Ms. Neha Kapoor",
+   "contactPhone": "9822110055",
+   "programmeId": "p_time",
+   "trainerId": "",
+   "start": "2026-12-22",
+   "days": 1,
+   "participants": 30,
+   "venue": "",
+   "fee": 40000,
+   "gst": 18,
+   "status": "Proposal sent",
+   "invoiceNo": "",
+   "feedback": null,
+   "notes": "Proposal sent; awaiting budget approval.",
+   "sample": true,
+   "createdAt": 1794470400000,
+   "updatedAt": 1794470400000
+  }
+ ],
+ "payouts": [
+  {
+   "id": "po1",
+   "trainerId": "t_priya",
+   "forWhat": "Sahyadri Engineering · Winning Presentation Skills",
+   "amount": 24000,
+   "date": "2026-10-03",
+   "status": "Paid",
+   "ref": "NEFT 55102",
+   "sample": true,
+   "createdAt": 1794470400000,
+   "updatedAt": 1794470400000
+  },
+  {
+   "id": "po2",
+   "trainerId": "t_priya",
+   "forWhat": "Vidya Public School · Time Management",
+   "amount": 12000,
+   "date": "2026-10-28",
+   "status": "Due",
+   "ref": "",
+   "sample": true,
+   "createdAt": 1794470400000,
+   "updatedAt": 1794470400000
+  },
+  {
+   "id": "po3",
+   "trainerId": "t_sneha",
+   "forWhat": "Batch TALLY-SEP26",
+   "amount": 15000,
+   "date": "2026-11-02",
+   "status": "Due",
+   "ref": "",
+   "sample": true,
+   "createdAt": 1794470400000,
+   "updatedAt": 1794470400000
+  }
+ ],
+ "resources": [
+  {
+   "id": "rs-update-1",
+   "sample": true,
+   "kind": "Update",
+   "title": "New C-CAT weekend batch starts in Nagpur",
+   "category": "News",
+   "date": "2026-11-10",
+   "published": true,
+   "pinned": true,
+   "summary": "Weekend classes for the next C-CAT exam, with mock tests every Sunday.",
+   "body": "Registrations are open at our Dharampeth centre. Classes run Saturday and Sunday mornings, with a full mock test every Sunday and doubt-solving on weekday evenings. Seats are limited to 30."
+  },
+  {
+   "id": "rs-image-1",
+   "sample": true,
+   "kind": "Image",
+   "title": "Our team at the Nagpur centre",
+   "category": "Events",
+   "date": "2026-11-05",
+   "published": true,
+   "summary": "The trainers and counsellors who run our IT education programmes.",
+   "url": "/team.jpg"
+  },
+  {
+   "id": "rs-link-1",
+   "sample": true,
+   "kind": "Link",
+   "title": "Soft Polynomials: IT training in Nagpur",
+   "category": "Partners",
+   "date": "2026-10-28",
+   "published": true,
+   "summary": "Our sister site for C-DAC and MKCL courses, schedules and admissions.",
+   "url": "https://www.softpolynomials.com/"
+  },
+  {
+   "id": "rs-update-2",
+   "sample": true,
+   "kind": "Update",
+   "title": "Business Leadership workshop for a finance client",
+   "category": "Corporate",
+   "date": "2026-10-20",
+   "published": true,
+   "summary": "Two days on leading teams through change, with pre-tests and personal action plans.",
+   "body": "Participants worked through real situations from their own teams and left with a 30-day action plan. Average feedback: 4.7 out of 5."
+  },
+  {
+   "id": "rs-pdf-1",
+   "sample": true,
+   "kind": "PDF",
+   "title": "Programme brochure 2026 (draft)",
+   "category": "Brochures",
+   "date": "2026-11-12",
+   "published": false,
+   "summary": "Full list of courses, durations and fees. Upload the final PDF before publishing."
+  }
+ ]
+}
