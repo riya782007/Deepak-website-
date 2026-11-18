@@ -341,7 +341,7 @@
     "Wed",
     "Fri"
    ],
-   "time": "10:00\u201312:00",
+   "time": "10:00–12:00",
    "capacity": 25,
    "status": "Running",
    "attendance": {
@@ -397,7 +397,7 @@
     "Thu",
     "Fri"
    ],
-   "time": "17:30\u201319:30",
+   "time": "17:30–19:30",
    "capacity": 30,
    "status": "Running",
    "attendance": {
@@ -435,7 +435,7 @@
     "Thu",
     "Sat"
    ],
-   "time": "11:00\u201313:00",
+   "time": "11:00–13:00",
    "capacity": 20,
    "status": "Completed",
    "attendance": {
@@ -583,7 +583,7 @@
     "Wed",
     "Fri"
    ],
-   "time": "14:00\u201317:00",
+   "time": "14:00–17:00",
    "capacity": 24,
    "status": "Upcoming",
    "attendance": {},
@@ -1448,7 +1448,7 @@
   {
    "id": "po1",
    "trainerId": "t_priya",
-   "forWhat": "Sahyadri Engineering \u00b7 Winning Presentation Skills",
+   "forWhat": "Sahyadri Engineering · Winning Presentation Skills",
    "amount": 24000,
    "date": "2026-10-03",
    "status": "Paid",
@@ -1460,7 +1460,7 @@
   {
    "id": "po2",
    "trainerId": "t_priya",
-   "forWhat": "Vidya Public School \u00b7 Time Management",
+   "forWhat": "Vidya Public School · Time Management",
    "amount": 12000,
    "date": "2026-10-28",
    "status": "Due",
@@ -1480,6 +1480,63 @@
    "sample": true,
    "createdAt": 1794470400000,
    "updatedAt": 1794470400000
+  }
+ ],
+ "resources": [
+  {
+   "id": "rs-update-1",
+   "sample": true,
+   "kind": "Update",
+   "title": "New C-CAT weekend batch starts in Nagpur",
+   "category": "News",
+   "date": "2026-11-10",
+   "published": true,
+   "pinned": true,
+   "summary": "Weekend classes for the next C-CAT exam, with mock tests every Sunday.",
+   "body": "Registrations are open at our Dharampeth centre. Classes run Saturday and Sunday mornings, with a full mock test every Sunday and doubt-solving on weekday evenings. Seats are limited to 30."
+  },
+  {
+   "id": "rs-image-1",
+   "sample": true,
+   "kind": "Image",
+   "title": "Our team at the Nagpur centre",
+   "category": "Events",
+   "date": "2026-11-05",
+   "published": true,
+   "summary": "The trainers and counsellors who run our IT education programmes.",
+   "url": "/team.jpg"
+  },
+  {
+   "id": "rs-link-1",
+   "sample": true,
+   "kind": "Link",
+   "title": "Soft Polynomials: IT training in Nagpur",
+   "category": "Partners",
+   "date": "2026-10-28",
+   "published": true,
+   "summary": "Our sister site for C-DAC and MKCL courses, schedules and admissions.",
+   "url": "https://www.softpolynomials.com/"
+  },
+  {
+   "id": "rs-update-2",
+   "sample": true,
+   "kind": "Update",
+   "title": "Business Leadership workshop for a finance client",
+   "category": "Corporate",
+   "date": "2026-10-20",
+   "published": true,
+   "summary": "Two days on leading teams through change, with pre-tests and personal action plans.",
+   "body": "Participants worked through real situations from their own teams and left with a 30-day action plan. Average feedback: 4.7 out of 5."
+  },
+  {
+   "id": "rs-pdf-1",
+   "sample": true,
+   "kind": "PDF",
+   "title": "Programme brochure 2026 (draft)",
+   "category": "Brochures",
+   "date": "2026-11-12",
+   "published": false,
+   "summary": "Full list of courses, durations and fees. Upload the final PDF before publishing."
   }
  ]
 }

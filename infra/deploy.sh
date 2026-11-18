@@ -31,7 +31,7 @@ npm run build
 echo "4/4 Upload"
 BUCKET=$(out SiteBucketName)
 aws s3 sync dist/assets "s3://$BUCKET/assets" --region "$REGION" --cache-control "public,max-age=31536000,immutable"
-aws s3 sync dist "s3://$BUCKET" --region "$REGION" --delete --exclude "assets/*" --cache-control "public,max-age=0,must-revalidate"
+aws s3 sync dist "s3://$BUCKET" --region "$REGION" --delete --exclude "assets/*" --exclude "media/*" --cache-control "public,max-age=0,must-revalidate"
 aws cloudfront create-invalidation --distribution-id "$(out DistributionId)" --paths "/*" --output text --query Invalidation.Status
 
 echo "Done: $(out SiteUrl)  console: $(out ConsoleUrl)"

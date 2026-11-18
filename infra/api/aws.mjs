@@ -8,7 +8,9 @@ import {
   AdminAddUserToGroupCommand, AdminRemoveUserFromGroupCommand, AdminDisableUserCommand,
   AdminEnableUserCommand, AdminUserGlobalSignOutCommand
 } from '@aws-sdk/client-cognito-identity-provider';
+import {S3Client, DeleteObjectCommand} from '@aws-sdk/client-s3';
 import {ROLES} from './app.mjs';
+import {presignPost} from './s3post.mjs';
 
 const ddb = DynamoDBDocumentClient.from(new DynamoDBClient({}), {marshallOptions: {removeUndefinedValues: true}});
 const idp = new CognitoIdentityProviderClient({});
@@ -89,5 +91,17 @@ export function cognitoTeam(UserPoolId) {
         await idp.send(new AdminAddUserToGroupCommand({UserPoolId, Username, GroupName: role}));
       }
     }
+  };
+}
+
+// Website resource files live under media/ in the site bucket and are served by CloudFront.
+export function s3Files(bucket, region) {
+  const s3 = new S3Client({});
+  return {
+    presign: async ({key, contentType, maxBytes}) => presignPost({
+      bucket, region, key, contentType, maxBytes,
+      credentials: {accessKeyId: process.env.AWS_ACCESS_KEY_ID, secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY, sessionToken: process.env.AWS_SESSION_TOKEN}
+    }),
+    remove: key => s3.send(new DeleteObjectCommand({Bucket: bucket, Key: key}))
   };
 }

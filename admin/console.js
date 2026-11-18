@@ -1,11 +1,12 @@
 // Soft Binomials operations console. Rendering and workflows live here;
 // storage comes from a backend: store-demo.js (browser only) or store-aws.js (live).
+import {RESOURCE_KINDS,ACCEPT,embedUrl,thumbUrl,kindForType,fileSize,safeHttp} from '../src/media.js';
 let BACKEND;
 export function startConsole(backend){
 BACKEND=backend;
 
 /* ---------- constants ---------- */
-const COLS = ['enquiries','students','programmes','batches','trainers','payments','payouts','engagements'];
+const COLS = ['enquiries','students','programmes','batches','trainers','payments','payouts','engagements','resources'];
 const WEEK = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 const DOW = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 const ST = {
@@ -30,6 +31,13 @@ const TRAINER_DOCS = ['CV','PAN','Aadhaar','Bank details','Signed agreement','De
 const STUDENT_DOCS = ['Admission form','ID proof','Photo','Marksheet'];
 
 const F = {
+  resources:[
+    {k:'title',l:'Title',req:1,wide:1},{k:'kind',l:'Type',t:'select',o:RESOURCE_KINDS},{k:'category',l:'Category',hint:'e.g. Brochures, Workshops, News, Student guides',list:'rcats'},
+    {k:'summary',l:'Short description',t:'textarea',wide:1,hint:'One or two lines shown on the website card.'},
+    {k:'file',l:'File',t:'file',wide:1},
+    {k:'url',l:'Or a link',t:'url',wide:1,hint:'YouTube or Vimeo link for videos, or any web page.'},
+    {k:'body',l:'Full text (for updates)',t:'textarea',wide:1,rows:5},
+    {k:'date',l:'Date shown',t:'date'},{k:'published',l:'Show on the website',t:'toggle'},{k:'pinned',l:'Pin to the top',t:'toggle'}],
   enquiries:[
     {k:'name',l:'Full name',req:1},{k:'phone',l:'Mobile',t:'tel',req:1},{k:'email',l:'Email',t:'email'},
     {k:'kind',l:'Enquiry for',t:'select',o:KINDS},{k:'programmeId',l:'Programme of interest',t:'programme'},
@@ -73,20 +81,31 @@ const F = {
     {k:'trainerId',l:'Trainer',t:'trainer',req:1,wide:1},{k:'forWhat',l:'For',wide:1,hint:'Batch or workshop'},
     {k:'amount',l:'Amount (₹)',t:'number',req:1},{k:'date',l:'Date',t:'date'},{k:'status',l:'Status',t:'select',o:ST.payouts},{k:'ref',l:'Payment reference'}]
 };
-const NOUN = {enquiries:'enquiry',students:'student',programmes:'programme',batches:'batch',trainers:'trainer',payments:'payment',payouts:'trainer payout',engagements:'corporate workshop'};
+const NOUN = {resources:'resource',enquiries:'enquiry',students:'student',programmes:'programme',batches:'batch',trainers:'trainer',payments:'payment',payouts:'trainer payout',engagements:'corporate workshop'};
 
+// [key, title, tagline, icon, menu group, eyebrow]. Menu groups run from daily work to occasional setup.
 const VIEWS = [
-  ['home','Today','What needs attention right now',ic('M3 11.5 12 4l9 7.5M5 10v10h14V10')],
-  ['enquiries','Enquiries','Every lead from first call to admission',ic('M4 5h16v11H8l-4 4zM8 9h8M8 12h5')],
-  ['students','Students','Admissions, fees, attendance and documents',ic('M12 4 2 9l10 5 10-5zM6 11v5c3 3 9 3 12 0v-5')],
-  ['batches','Batches','Classes, trainers and attendance',ic('M4 6h16v14H4zM4 10h16M9 3v5M15 3v5')],
-  ['trainers','Trainers','Onboarding pipeline, documents and payouts',ic('M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21c1-4 4-6 8-6s7 2 8 6')],
-  ['corporate','Corporate','Workshops sold to companies and institutions',ic('M3 8h18v12H3zM9 8V5h6v3M3 13h18')],
-  ['fees','Fees & payouts','Collections, dues and trainer payments',ic('M3 7h18v12H3zM16 13h2M3 10h18')],
-  ['programmes','Programmes','Courses, workshops and services you offer',ic('M5 4h11l3 3v13H5zM9 9h6M9 13h6M9 17h4')],
-  ['reports','Reports','Collections, conversions and trends',ic('M4 20V10M10 20V4M16 20v-7M22 20H2')],
-  ['setup','Setup','Organisation details, centres and data',ic('M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6zM19 12l2-1-2-4-2 1-2-2V4h-4v2L9 7 7 6 5 10l2 1v2l-2 1 2 4 2-1 2 2v2h4v-2l2-2 2 1 2-4-2-1z')]
+  ['home','Today','What needs attention right now',ic('M3 11.5 12 4l9 7.5M5 10v10h14V10'),'Daily work','Your daily pulse'],
+  ['enquiries','Enquiries','Every lead from first call to admission',ic('M4 5h16v11H8l-4 4zM8 9h8M8 12h5'),'Daily work','From first call to admission'],
+  ['students','Students','Admissions, fees, attendance and documents',ic('M12 4 2 9l10 5 10-5zM6 11v5c3 3 9 3 12 0v-5'),'Daily work','Learners and their progress'],
+  ['batches','Batches','Classes, trainers and attendance',ic('M4 6h16v14H4zM4 10h16M9 3v5M15 3v5'),'Daily work','Classes in session'],
+  ['fees','Fees & payouts','Collections, dues and trainer payments',ic('M3 7h18v12H3zM16 13h2M3 10h18'),'Money & people','Money in, money out'],
+  ['trainers','Trainers','Onboarding pipeline, documents and payouts',ic('M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21c1-4 4-6 8-6s7 2 8 6'),'Money & people','The people who teach'],
+  ['corporate','Corporate','Workshops sold to companies and institutions',ic('M3 8h18v12H3zM9 8V5h6v3M3 13h18'),'Money & people','Training for organisations'],
+  ['resources','Resources','PDFs, videos, images and updates shown on the website',ic('M4 4h10l6 6v10H4zM14 4v6h6M8 14h8M8 17h5'),'Website','Shared on your website'],
+  ['reports','Reports','Collections, conversions and trends',ic('M4 20V10M10 20V4M16 20v-7M22 20H2'),'Insights & setup','How the business is doing'],
+  ['programmes','Programmes','Courses, workshops and services you offer',ic('M5 4h11l3 3v13H5zM9 9h6M9 13h6M9 17h4'),'Insights & setup','What you offer'],
+  ['setup','Setup','Organisation details, team and data',ic('M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6zM19 12l2-1-2-4-2 1-2-2V4h-4v2L9 7 7 6 5 10l2 1v2l-2 1 2 4 2-1 2 2v2h4v-2l2-2 2 1 2-4-2-1z'),'Insights & setup','Your organisation']
 ];
+const GROUPS=['Daily work','Money & people','Website','Insights & setup'];
+const ICON={
+  bell:'M6 8a6 6 0 1 1 12 0c0 7 3 8 3 8H3s3-1 3-8M10 21h4',users:'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8',
+  cal:'M4 6h16v14H4zM4 10h16M9 3v5M15 3v5',rupee:'M6 4h12M6 9h12M14 20 7 13h2a4 4 0 0 0 0-9',due:'M12 7v5l3 2M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z',
+  brief:'M3 8h18v12H3zM9 8V5h6v3M3 13h18',spark:'M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8zM19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z',
+  ext:'M14 4h6v6M20 4l-9 9M18 14v6H4V6h6',sun:'M12 17a5 5 0 1 0 0-10 5 5 0 0 0 0 10zM12 1v2M12 21v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M1 12h2M21 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4',
+  moon:'M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z',globe:'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18',
+  out:'M15 4h4v16h-4M10 17l5-5-5-5M15 12H3',chev:'m6 9 6 6 6-6'};
+const svgI=k=>ic(ICON[k]);
 function ic(d){return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${d}"/></svg>`}
 
 /* ---------- state ---------- */
@@ -95,7 +114,7 @@ COLS.forEach(c=>S[c]=[]);
 const M = {};
 let DB=null, RO=false, LOADED=false, CONNECTED=null, MODE='demo', ROLE='owner';
 let view='home', Q='';
-const FL = {students:{status:'Active',fee:'All',prog:''},enquiries:{kind:'All'},batches:{status:'Open'},corporate:{status:'All'},fees:{tab:'collections',month:'All'}};
+const FL = {resources:{kind:'All'},students:{status:'Active',fee:'All',prog:''},enquiries:{kind:'All'},batches:{status:'Open'},corporate:{status:'All'},fees:{tab:'collections',month:'All'}};
 let D=null;            // drawer state {mode,kind,id,...}
 let ATT=null;          // attendance draft {batchId,date,set:Set}
 let IMP=null;          // import state
@@ -166,8 +185,12 @@ const del=(c,id)=>DB.collection(c).doc(id).delete();
 /* ---------- data connection ---------- */
 async function connect(){
   const b=BACKEND;DB=b.db;CONNECTED=true;MODE=b.mode;ROLE=b.role||'owner';
-  $('#me').innerHTML=`<span class="who"></span>${b.signOut?'<button class="btn sm ghost" data-a="signout">Sign out</button>':''}`;
-  $('#me .who').textContent=b.review?'Review copy':b.mode==='demo'?'Demo mode':(b.me&&b.me.name?`Signed in as ${b.me.name}`:'Signed in');
+  const nm=b.review?'Reviewer':b.mode==='demo'?'Demo user':(b.me&&b.me.name)||'Signed in';
+  const ini=nm.split(/[\s@.]+/).filter(Boolean).slice(0,2).map(x=>x[0].toUpperCase()).join('')||'SB';
+  $('#me').innerHTML=`<details class="menu"><summary class="me" aria-label="Account menu"><span class="avatar">${esc(ini)}</span><span class="who"><b>${esc(nm)}</b><small>${esc(b.review?'Review copy':b.mode==='demo'?'Demo':ROLE[0].toUpperCase()+ROLE.slice(1))}</small></span>${ic(ICON.chev).replace('<svg','<svg style="width:14px;height:14px;color:var(--faint)"')}</summary>
+    <div class="pop"><div class="lbl">${esc(b.me&&b.me.email||nm)}</div><button data-a="theme">${svgI('moon')}<span>Switch theme</span></button><a href="${esc(siteUrl())}" target="_blank" rel="noopener">${svgI('globe')}<span>Visit website</span></a>${b.signOut?`<hr><button data-a="signout">${svgI('out')}<span>Sign out</span></button>`:''}</div></details>`;
+  $('#liveDot').className='live'+(b.mode==='demo'?' demo':'');$('#liveDot').title=b.mode==='demo'?'Sample data in this browser':'Connected';
+  $('#footNote').textContent=b.mode==='demo'?'Sample data · saved in this browser only':'Changes save automatically';
   if(ROLE==='viewer'){RO=true;document.body.classList.add('ro')}
   if(!['admin','owner'].includes(ROLE))document.body.classList.add('nodel');
   const db=DB;
@@ -181,15 +204,20 @@ let raf=0;
 function schedule(){if(raf)return;raf=requestAnimationFrame(()=>{raf=0;COLS.forEach(c=>M[c]=new Map(S[c].map(d=>[d.id,d])));render();if(D&&D.mode==='detail')drawDetail()})}
 
 /* ---------- shell ---------- */
+function siteUrl(){return S.config.websiteUrl||(location.origin+'/')}
 function nav(){
   const fu=S.enquiries.filter(e=>e.followUp&&e.followUp<=today()&&!['Converted','Lost'].includes(e.stage)).length;
-  $('#nav').innerHTML=VIEWS.map(([k,t,,svg])=>`<a href="#${k}" ${k===view?'aria-current="page"':''}>${svg}<span>${t}</span>${k==='enquiries'&&fu?`<span class="cnt" title="Follow-ups due">${fu}</span>`:''}</a>`).join('');
+  const live=(S.resources||[]).filter(r=>r.published).length;
+  $('#nav').innerHTML=GROUPS.map(g=>`<div class="grp">${g}</div>`+VIEWS.filter(v=>v[4]===g).map(([k,t,,svg])=>`<a href="#${k}" ${k===view?'aria-current="page"':''}>${svg}<span>${t}</span>${k==='enquiries'&&fu?`<span class="cnt" title="Follow-ups due">${fu}</span>`:''}${k==='resources'&&live?`<span class="cnt" style="background:var(--mint);color:var(--mint-ink)" title="Published on the website">${live}</span>`:''}</a>`).join('')
+    +(g==='Website'?`<a href="${esc(siteUrl())}" target="_blank" rel="noopener" data-a="extlink">${svgI('globe')}<span>Visit website</span>${ic(ICON.ext).replace('<svg','<svg class="ext"')}</a>`:'')).join('');
 }
 function banners(){
   const out=[];
-  if(MODE==='demo')out.push(BACKEND.review
-    ?`<div class="banner info"><span><b>Review copy.</b> Every name and number here is sample data, saved only in your browser. Try anything: add, edit, take attendance, print receipts. Nothing is sent anywhere.</span><button class="btn sm" data-a="resetdemo">Start over</button></div>`
-    :`<div class="banner info"><span><b>Demo mode.</b> Records are examples kept only in this browser. Connect the database (see admin/README.md) to start using real data.</span><button class="btn sm" data-a="resetdemo">Reset demo data</button></div>`);
+  const strip=$('#strip');
+  if(MODE==='demo'){strip.hidden=false;strip.innerHTML=BACKEND.review
+    ?`<span class="live demo" style="margin:0"></span><span><b>Review copy.</b> Every name and number is sample data, saved only in your browser. Try anything; nothing is sent anywhere.</span><span class="sp"></span><button class="btn sm" data-a="resetdemo">Start over</button>`
+    :`<span class="live demo" style="margin:0"></span><span><b>Demo mode.</b> Example records kept only in this browser.</span><span class="sp"></span><button class="btn sm" data-a="resetdemo">Reset demo data</button>`}
+  else strip.hidden=true;
   if(CONNECTED&&!LOADED)out.push(`<div class="banner info">Loading records…</div>`);
   if(RO)out.push(`<div class="banner info">You can view records but not change them. Ask the owner to change your role in Setup.</div>`);
   const ns=COLS.reduce((a,c)=>a+S[c].filter(d=>d.sample).length,0);
@@ -198,9 +226,16 @@ function banners(){
 }
 function render(){
   const v=VIEWS.find(x=>x[0]===view)||VIEWS[0];
-  $('#vt').textContent=v[1];$('#vs').textContent=v[2];
+  $('#vt').textContent=v[1];$('#crumb span').textContent=v[4];$('#eyebrow').textContent=v[5];
+  if(view==='home'){const h=new Date().getHours();const first=((BACKEND.me&&BACKEND.me.name)||'').split(/[\s@]/)[0];
+    $('#vh').textContent=`${h<12?'Good morning':h<17?'Good afternoon':'Good evening'}${first&&!BACKEND.review&&MODE!=='demo'?', '+first:''}.`;
+    $('#vs').textContent=`${new Date().toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long'})} · Here’s what needs you today.`}
+  else{$('#vh').textContent=v[1];$('#vs').textContent=v[2]}
+  document.title=`${v[1]} · ${BACKEND.review?'Admin console (review copy)':'Soft Binomials Console'}`;
+  if(S.config.orgName)$('#orgName').textContent=S.config.orgName;
+  const cen=(S.config.centres||[]).filter(c=>!/online|client/i.test(c));if(cen.length)$('#orgSub').textContent=cen.slice(0,3).join(' · ');
   nav();banners();
-  const fn={home:vHome,enquiries:vEnquiries,students:vStudents,batches:vBatches,trainers:vTrainers,corporate:vCorporate,fees:vFees,programmes:vProgrammes,reports:vReports,setup:vSetup}[view]||vHome;
+  const fn={resources:vResources,home:vHome,enquiries:vEnquiries,students:vStudents,batches:vBatches,trainers:vTrainers,corporate:vCorporate,fees:vFees,programmes:vProgrammes,reports:vReports,setup:vSetup}[view]||vHome;
   $('#view').innerHTML=fn();
   if(view==='setup'&&BACKEND.team)loadTeam();
   if(view==='setup'&&BACKEND.audit)loadAudit();
@@ -240,7 +275,7 @@ async function loadTeam(){
 function route(){const h=location.hash.slice(1);view=VIEWS.some(v=>v[0]===h)?h:'home';Q='';$('#q').value='';render();window.scrollTo(0,0)}
 
 /* ---------- views ---------- */
-function kpi(l,v,s,href,alert){return `<a class="kpi ${alert?'alert':''}" href="#${href}"><span class="l">${l}</span><span class="v">${v}</span><span class="s">${s}</span></a>`}
+function kpi(l,v,s,href,alert,icon){return `<a class="kpi ${alert?'alert':''}" href="#${href}"><span class="l">${l}${icon?`<span class="ic">${svgI(icon)}</span>`:''}</span><span class="v">${v}</span><span class="s">${s}</span></a>`}
 const TOUR=[
   ['enquiries','Follow up a lead','Open Enquiries, move a card to the next stage, then convert one into an admission.'],
   ['students','Collect a fee','Open a student, record a payment and download the PDF receipt.'],
@@ -271,20 +306,25 @@ function vHome(){
   const pipe=ST.trainers.slice(0,4).map(st=>[st,S.trainers.filter(x=>x.stage===st).length]);
   const docsPending=S.trainers.filter(x=>['Approved','Active'].includes(x.stage)&&TRAINER_DOCS.filter(d=>!(x.docs||[]).includes(d)).length);
   const recent=[...S.payments].sort((a,b)=>(b.date||'').localeCompare(a.date||'')).slice(0,5);
-  const hour=new Date().getHours();
-  const greet=hour<12?'Good morning':hour<17?'Good afternoon':'Good evening';
   const tr=S.trainers.length;
-  return `<div class="grid" style="gap:18px">${BACKEND.review?tourCard():''}
-  <section class="hello"><div><p style="margin:0;color:var(--muted);font-weight:600">${new Date().toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long'})}</p><h2 style="font:700 22px/1.2 var(--display)">${greet}. Here’s your day.</h2></div>
-  <div class="quick w"><button class="btn" data-a="new" data-k="enquiries">+ Enquiry</button><button class="btn" data-a="new" data-k="students">+ Admission</button><button class="btn pri" data-a="new" data-k="payments">Record fee payment</button></div></section>
+  const focus=[];
+  if(fu.length)focus.push(`<b>${fu.length} follow-up${fu.length===1?'':'s'}</b> waiting${fu[0]?`, starting with ${esc(fu[0].name)}`:''}`);
+  if(overdue.length)focus.push(`<b>${inr(overdue.reduce((a,x)=>a+x.f.due,0))}</b> in fees due from ${overdue.length} student${overdue.length===1?'':'s'}`);
+  if(todays.length)focus.push(`<b>${todays.length} class${todays.length===1?'':'es'}</b> to mark attendance for`);
+  if(ws[0])focus.push(`next workshop is <b>${esc(ws[0].client)}</b> on ${fmtS(ws[0].start)}`);
+  const focusText=focus.length?focus.slice(0,3).join(' · ')+'.':'Nothing urgent today. A good moment to call last month’s enquiries or import your Excel sheets.';
+  return `<div class="grid" style="gap:20px">${BACKEND.review?tourCard():''}
+  <section class="insight"><span class="spark">${svgI('spark')}</span><div><small>Today’s focus</small><p>${focusText}</p></div></section>
   <div class="kpis">
-    ${kpi('Follow-ups due',fu.length,`${openEnq} open enquiries`,'enquiries',fu.length>0)}
-    ${kpi('Active students',active.length,`${S.students.length} on record`,'students')}
-    ${kpi('Running batches',running.length,`${todays.length} class${todays.length===1?'':'es'} today`,'batches')}
-    ${kpi('Collected this month',inr(coll),new Date().toLocaleDateString('en-IN',{month:'long'}),'fees')}
-    ${kpi('Fees outstanding',inr(outstanding),`${overdue.length} due now`,'fees',overdue.length>0)}
-    ${kpi('Workshops in 30 days',ws.length,`${S.engagements.filter(e=>['Confirmed','Proposal sent'].includes(e.status)).length} in pipeline`,'corporate')}
+    ${kpi('Follow-ups due',fu.length,`${openEnq} open enquiries`,'enquiries',fu.length>0,'bell')}
+    ${kpi('Active students',active.length,`${S.students.length} on record`,'students',false,'users')}
+    ${kpi('Running batches',running.length,`${todays.length} class${todays.length===1?'':'es'} today`,'batches',false,'cal')}
+    ${kpi('Collected',inr(coll),`${new Date().toLocaleDateString('en-IN',{month:'long'})} so far`,'fees',false,'rupee')}
+    ${kpi('Fees outstanding',inr(outstanding),`${overdue.length} due now`,'fees',overdue.length>0,'due')}
+    ${kpi('Workshops ahead',ws.length,`next 30 days · ${S.engagements.filter(e=>['Confirmed','Proposal sent'].includes(e.status)).length} in pipeline`,'corporate',false,'brief')}
   </div>
+  <div class="toolbar w" style="gap:10px"><span style="font-size:12px;color:var(--faint);margin-right:4px">Make it happen</span>
+    <button class="btn" data-a="new" data-k="enquiries">+ Enquiry</button><button class="btn" data-a="new" data-k="students">+ Admission</button><button class="btn" data-a="new" data-k="resources">+ Website resource</button><span class="sp"></span><button class="btn pri" data-a="new" data-k="payments">Record fee payment</button></div>
   <div class="grid g2">
     <section class="card"><div class="card-h"><h2>Follow-ups due</h2><a class="more" href="#enquiries">All enquiries</a></div>
       <div class="list">${fu.slice(0,6).map(e=>`<div class="row"><button class="linkrow" data-a="open" data-k="enquiries" data-id="${e.id}"><div class="main"><b>${esc(e.name)}${smp(e)}</b><span>${esc(pname(e.programmeId)!=='—'?pname(e.programmeId):e.kind||'')} · ${esc(e.source||'')} · <span class="${e.followUp<t?'late':''}">${e.followUp<t?'Overdue since '+fmtS(e.followUp):'Today'}</span></span></div></button><div class="side-act">${waBtn(e.phone,followMsg(e),'Message')}<button class="btn sm w" data-a="contacted" data-id="${e.id}">Done</button></div></div>`).join('')||`<p class="empty">No follow-ups due. New enquiries from the website, calls and walk-ins appear in Enquiries.</p>`}</div></section>
@@ -361,7 +401,7 @@ function vCorporate(){
   const delivered=S.engagements.filter(e=>['Delivered','Invoiced','Paid'].includes(e.status)&&(e.start||'').startsWith(y)).reduce((a,e)=>a+engTotal(e),0);
   const unpaid=S.engagements.filter(e=>['Delivered','Invoiced'].includes(e.status)).reduce((a,e)=>a+engTotal(e),0);
   const fb=S.engagements.filter(e=>+e.feedback);const avg=fb.length?(fb.reduce((a,e)=>a+(+e.feedback),0)/fb.length).toFixed(1):'—';
-  return `<div class="grid" style="gap:14px"><div class="kpis" style="grid-template-columns:repeat(4,minmax(0,1fr))">
+  return `<div class="grid" style="gap:14px"><div class="kpis k4">
     <div class="kpi"><span class="l">Pipeline (incl. GST)</span><span class="v">${inr(pipeline)}</span><span class="s">Proposals and confirmed</span></div>
     <div class="kpi"><span class="l">Delivered in ${y}</span><span class="v">${inr(delivered)}</span><span class="s">Delivered, invoiced or paid</span></div>
     <div class="kpi ${unpaid?'alert':''}"><span class="l">Awaiting payment</span><span class="v">${inr(unpaid)}</span><span class="s">Delivered or invoiced</span></div>
@@ -401,6 +441,35 @@ function vFees(){
   return `<div class="grid" style="gap:14px">${tabs}${body}</div>`;
 }
 
+/* ---------- website resources ---------- */
+const RICON={Update:'M4 5h16v11H8l-4 4zM8 9h8M8 12h5',PDF:'M6 3h9l5 5v13H6zM14 3v6h6M9 14h6M9 17h4',Video:'M3 6h13v12H3zM16 10l5-3v10l-5-3',Image:'M3 5h18v14H3zM3 16l5-5 4 4 3-3 6 6M15 9h.01',Link:'M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1'};
+const rUrl=r=>safeHttp((r.file&&r.file.url)||r.url||'');
+const rView=r=>({...r,url:rUrl(r)});
+function rThumb(r){const t=thumbUrl(rView(r));return `<div class="rthumb ${t?'':'plain'}" data-kind="${esc(r.kind)}">${t?`<img src="${esc(t)}" alt="" loading="lazy">`:ic(RICON[r.kind]||RICON.Update)}<span class="k">${pill(r.published?'Live':'Draft',r.published?'good':'')}${r.pinned?pill('Pinned','peach'):''}</span></div>`}
+function vResources(){
+  const all=S.resources;
+  if(!all.length&&LOADED)return emptyBig('Nothing shared yet','Add brochures, workshop photos, videos, programme PDFs and news updates. Anything you mark “Show on the website” appears on the website’s Resources page within a minute.','resources');
+  const f=FL.resources.kind;
+  const counts={All:all.length,Live:all.filter(r=>r.published).length,Drafts:all.filter(r=>!r.published).length};RESOURCE_KINDS.forEach(k=>counts[k]=all.filter(r=>r.kind===k).length);
+  const list=all.filter(r=>f==='All'||(f==='Live'?r.published:f==='Drafts'?!r.published:r.kind===f)).filter(r=>match(r,'title','summary','category','body','kind'))
+    .sort((a,b)=>(b.pinned?1:0)-(a.pinned?1:0)||(b.date||'').localeCompare(a.date||''));
+  return `<div class="grid" style="gap:16px"><div class="toolbar">${chips('resources','kind',['All','Live','Drafts',...RESOURCE_KINDS],counts)}<span class="sp"></span><a class="btn sm" href="${esc(siteUrl())}resources/" target="_blank" rel="noopener">${svgI('globe')}See it on the website</a><button class="btn sm pri w" data-a="new" data-k="resources">+ Resource</button></div>
+  ${list.length?`<div class="rgrid">${list.map(r=>`<button class="rcard" data-a="open" data-k="resources" data-id="${r.id}">${rThumb(r)}<div class="rbody"><b>${esc(r.title)}${smp(r)}</b><span>${esc(r.summary||r.body||'').slice(0,110)}</span><div class="foot">${pill(r.kind,'acc')}${r.category?`<span class="tag">${esc(r.category)}</span>`:''}<span style="margin-left:auto;font-size:11.5px;color:var(--faint)">${r.date?fmtS(r.date):''}</span></div></div></button>`).join('')}</div>`:`<p class="empty">Nothing matches this filter.</p>`}</div>`;
+}
+function dResource(r){
+  const url=rUrl(r);const emb=embedUrl(url);
+  const media=r.kind==='Image'&&url?`<img src="${esc(url)}" alt="${esc(r.title)}">`
+    :r.kind==='Video'&&emb?`<iframe src="${esc(emb)}" title="${esc(r.title)}" allow="encrypted-media; picture-in-picture" allowfullscreen loading="lazy"></iframe>`
+    :r.kind==='Video'&&url?`<video src="${esc(url)}" controls preload="metadata"></video>`:'';
+  return dHead(esc(r.title)+smp(r),`${pill(r.published?'Live on website':'Draft',r.published?'good':'warn')}${pill(r.kind,'acc')}${r.pinned?pill('Pinned','peach'):''}`)+`<div class="db">
+  <div class="acts w"><button class="btn sm ${r.published?'':'pri'}" data-a="rpublish" data-id="${r.id}">${r.published?'Hide from website':'Publish on website'}</button><button class="btn sm" data-a="rpin" data-id="${r.id}">${r.pinned?'Unpin':'Pin to top'}</button><button class="btn sm" data-a="edit" data-k="resources" data-id="${r.id}">Edit</button>${url?`<a class="btn sm" href="${esc(url)}" target="_blank" rel="noopener">Open ${r.kind==='PDF'?'PDF':r.kind==='Link'?'link':'file'}</a>`:''}</div>
+  ${media?`<div class="preview-media">${media}</div>`:''}
+  <div class="sect"><h3>Details</h3>${facts([['Type',esc(r.kind)],['Category',esc(r.category)],['Date shown',r.date?fmtS(r.date):''],['File',r.file&&r.file.name?`${esc(r.file.name)} · ${fileSize(r.file.size)}`:''],['Link',r.url?`<a href="${esc(safeHttp(r.url))}" target="_blank" rel="noopener">${esc(r.url)}</a>`:'']])}</div>
+  ${r.summary||r.body?`<div class="sect"><h3>Text</h3>${r.summary?`<p style="margin:0 0 8px;font-weight:500">${esc(r.summary)}</p>`:''}${r.body?`<p style="margin:0;white-space:pre-wrap;color:var(--muted)">${esc(r.body)}</p>`:''}</div>`:''}
+  <p style="margin:0;font-size:12.5px;color:var(--faint)">${r.published?'Visitors see this on the website’s Resources page. Changes appear within a minute.':'Only your team can see this until you publish it.'}</p>
+  ${delBtn('resources',r.id)}</div>`;
+}
+
 function vProgrammes(){
   if(!S.programmes.length&&LOADED)return emptyBig('No programmes yet','List the courses, corporate workshops, student services and consulting packages you offer, with standard fees. Admissions and batches pick from this list.','programmes');
   const list=S.programmes.filter(p=>match(p,'name','track','description'));
@@ -438,6 +507,7 @@ function vSetup(){
     <label class="fld wide"><span>Address</span><textarea id="c_addr" name="address" rows="2">${esc(c.address||'')}</textarea></label>
     <label class="fld"><span>Phone</span><input id="c_ph" name="phone" value="${esc(c.phone||'')}"></label>
     <label class="fld"><span>Email</span><input id="c_em" name="email" value="${esc(c.email||'')}"></label>
+    <label class="fld wide"><span>Website address</span><input id="c_web" name="websiteUrl" type="url" value="${esc(c.websiteUrl||'')}" placeholder="${esc(location.origin)}/"><span class="hint">Used by “Visit website” in the menu. Leave empty to use this site.</span></label>
     <label class="fld"><span>GSTIN</span><input id="c_gst" name="gstin" value="${esc(c.gstin||'')}"></label>
     <label class="fld"><span>Receipt signatory</span><input id="c_sig" name="signatory" value="${esc(c.signatory||'')}" placeholder="e.g. Accounts, Soft Binomials India"></label>
     <label class="fld wide"><span>Centres, one per line</span><textarea id="c_cen" name="centres" rows="4">${esc((c.centres||[]).join('\n'))}</textarea></label>
@@ -466,7 +536,7 @@ function openDetail(k,id){if(k==='programmes'||k==='payments'){openForm(k,id);re
 function drawDetail(){
   const {kind:k,id}=D;const d=M[k]?.get(id);
   if(!d){$('#drawer').innerHTML=dHead('Record removed')+`<div class="db"><p class="empty">This record no longer exists.</p></div>`;return}
-  const html={enquiries:dEnquiry,students:dStudent,trainers:dTrainer,batches:dBatch,engagements:dEngagement,payouts:dPayout}[k](d);
+  const html={enquiries:dEnquiry,students:dStudent,trainers:dTrainer,batches:dBatch,engagements:dEngagement,payouts:dPayout,resources:dResource}[k](d);
   const sc=$('#drawer .db')?.scrollTop||0;
   $('#drawer').innerHTML=html;const b=$('#drawer .db');if(b)b.scrollTop=sc;
 }
@@ -537,7 +607,7 @@ function fieldHTML(f,v){
   const lab=`<span>${f.l}${f.req?' *':''}</span>`;const hint=f.hint?`<span class="hint">${f.hint}</span>`:'';
   const sel=(opts)=>`<label class="fld${wide}">${lab}<select id="${id}" name="${f.k}" ${req}><option value="">Select…</option>${opts}</select>${hint}</label>`;
   switch(f.t){
-    case 'textarea':return `<label class="fld wide">${lab}<textarea id="${id}" name="${f.k}" rows="3">${esc(v)}</textarea>${hint}</label>`;
+    case 'textarea':return `<label class="fld wide">${lab}<textarea id="${id}" name="${f.k}" rows="${f.rows||3}">${esc(v)}</textarea>${hint}</label>`;
     case 'select':return sel(f.o.map(o=>opt(o,o,o===v)).join(''));
     case 'programme':return sel(TRACKS.map(t=>{const ps=S.programmes.filter(p=>p.track===t);return ps.length?`<optgroup label="${t}">${ps.map(p=>opt(p.id,p.name,p.id===v)).join('')}</optgroup>`:''}).join(''));
     case 'batch':return sel(S.batches.filter(b=>b.status!=='Cancelled'&&(b.status!=='Completed'||b.id===v)).map(b=>opt(b.id,`${b.code} · ${pname(b.programmeId)}`,b.id===v)).join(''));
@@ -545,13 +615,15 @@ function fieldHTML(f,v){
     case 'student':return sel([...S.students].sort((a,b)=>a.name.localeCompare(b.name)).map(s=>{const fi=fin(s);return opt(s.id,`${s.name} · ${s.code||''}${fi.due>0?` · balance ${inr(fi.due)}`:''}`,s.id===v)}).join(''));
     case 'centre':return sel((S.config.centres||[]).map(c=>opt(c,c,c===v)).join('')+(v&&!(S.config.centres||[]).includes(v)?opt(v,v,true):''));
     case 'checks':case 'days':{const o=f.t==='days'?WEEK:f.o;const a=Array.isArray(v)?v:[];return `<fieldset class="fld wide"><legend>${f.l}</legend><div class="checks">${o.map(x=>`<label class="chk"><input type="checkbox" name="${f.k}" value="${esc(x)}" ${a.includes(x)?'checked':''}><span>${esc(x)}</span></label>`).join('')}</div></fieldset>`}
+    case 'toggle':return `<label class="chk" style="align-self:end;min-height:40px"><input type="checkbox" name="${f.k}" ${v?'checked':''}><span>${f.l}</span></label>`;
+    case 'file':return `<div class="fld wide"><span>${f.l}</span><div class="drop" style="padding:14px;gap:10px">${v&&v.name?`<span style="font-size:13px">Current: <b>${esc(v.name)}</b> ${v.size?`· ${fileSize(v.size)}`:''}</span>`:''}<input id="${id}" name="${f.k}" type="file" accept="${ACCEPT}"><span class="hint" style="font-size:11.5px;color:var(--faint)">${BACKEND.review||MODE==='demo'?'In this review copy, files up to 1.5 MB stay in your browser. ':''}PDF up to 25 MB, images up to 10 MB, videos up to 200 MB. For long videos, a YouTube link is lighter.</span><div class="upl" hidden><i></i></div></div></div>`;
     case 'tags':return `<label class="fld wide">${lab}<input id="${id}" name="${f.k}" value="${esc((v||[]).join(', '))}">${hint}</label>`;
-    default:return `<label class="fld${wide}">${lab}<input id="${id}" name="${f.k}" type="${f.t||'text'}" ${f.t==='number'?`inputmode="decimal" step="${f.step||'1'}" min="0"`:''} value="${esc(v)}" ${req}>${hint}</label>`;
+    default:return `<label class="fld${wide}">${lab}<input id="${id}" name="${f.k}" type="${f.t||'text'}" ${f.t==='number'?`inputmode="decimal" step="${f.step||'1'}" min="0"`:''} ${f.list?`list="${f.list}"`:''} value="${esc(v)}" ${req}>${f.list==='rcats'?`<datalist id="rcats">${[...new Set(['Brochures','Workshops','News','Student guides','Corporate','Events',...S.resources.map(r=>r.category).filter(Boolean)])].map(c=>`<option value="${esc(c)}">`).join('')}</datalist>`:''}${hint}</label>`;
   }
 }
 function defaults(k){
   const t=today();
-  return {enquiries:{stage:'New',source:'Phone call',kind:'Student course',followUp:t},students:{status:'Active',joinedOn:t,docs:['Admission form']},trainers:{stage:'Applied',rateType:'Per day'},programmes:{track:'IT course',mode:'Classroom'},batches:{status:'Upcoming',start:t},engagements:{status:'Proposal sent',gst:18,days:1},payments:{date:t,mode:'UPI'},payouts:{date:t,status:'Due'}}[k]||{};
+  return {resources:{kind:'Update',date:t,published:false},enquiries:{stage:'New',source:'Phone call',kind:'Student course',followUp:t},students:{status:'Active',joinedOn:t,docs:['Admission form']},trainers:{stage:'Applied',rateType:'Per day'},programmes:{track:'IT course',mode:'Classroom'},batches:{status:'Upcoming',start:t},engagements:{status:'Proposal sent',gst:18,days:1},payments:{date:t,mode:'UPI'},payouts:{date:t,status:'Due'}}[k]||{};
 }
 function openForm(k,id,pre={}){
   if(RO){toast('You can view records but not change them.','bad');return}
@@ -560,7 +632,7 @@ function openForm(k,id,pre={}){
   if(k==='students'&&!d&&v.programmeId&&!v.feeTotal)v.feeTotal=prog(v.programmeId)?.fee||'';
   D={mode:'form',kind:k,id:id||null,pre};
   openDrawer();
-  $('#drawer').innerHTML=dHead(d?`Edit ${NOUN[k]}`:(k==='payments'?'Record fee payment':`New ${NOUN[k]}`),d?esc(d.name||d.code||d.client||d.receiptNo||''):'')+`<div class="db"><form class="f" data-kind="${k}" novalidate>${F[k].map(f=>fieldHTML(f,v[f.k])).join('')}
+  $('#drawer').innerHTML=dHead(d?`Edit ${NOUN[k]}`:(k==='payments'?'Record fee payment':`New ${NOUN[k]}`),d?esc(d.name||d.code||d.client||d.receiptNo||d.title||''):'')+`<div class="db"><form class="f" data-kind="${k}" novalidate>${F[k].map(f=>fieldHTML(f,v[f.k])).join('')}
   ${k==='payments'?`<p class="wide" style="grid-column:1/-1;margin:0;color:var(--muted);font-size:13px" id="payhint"></p>`:''}
   <div class="f-acts">${d&&k!=='payments'?'':''}<button type="button" class="btn" data-a="${d&&['programmes','payments'].indexOf(k)<0?'back':'close'}">Cancel</button><button class="btn pri" type="submit">${d?'Save changes':k==='payments'?'Save and get receipt':'Save'}</button></div>
   ${d&&['programmes','payments'].includes(k)?`<div class="f-acts" style="justify-content:flex-start">${k==='payments'?`<button type="button" class="btn sm" data-a="receipt" data-id="${d.id}">Receipt PDF</button>`:''}<button type="button" class="btn sm danger" data-a="del" data-k="${k}" data-id="${d.id}">Delete ${NOUN[k]}</button></div>`:''}</form></div>`;
@@ -571,6 +643,8 @@ function payHint(){const sel=$('#f_studentId');const h=$('#payhint');if(!sel||!h
 function collect(form,k){
   const fd=new FormData(form);const out={};
   F[k].forEach(f=>{
+    if(f.t==='file')return;
+    if(f.t==='toggle'){out[f.k]=fd.get(f.k)==='on';return}
     if(f.t==='checks'||f.t==='days')out[f.k]=fd.getAll(f.k);
     else if(f.t==='tags')out[f.k]=String(fd.get(f.k)||'').split(',').map(s=>s.trim()).filter(Boolean);
     else if(f.t==='number'){const x=fd.get(f.k);out[f.k]=x===''||x===null?null:Number(x)}
@@ -580,14 +654,30 @@ function collect(form,k){
 }
 async function submitForm(form){
   const k=form.dataset.kind;
-  if(k==='config'){const fd=new FormData(form);const c={orgName:fd.get('orgName').trim(),address:fd.get('address').trim(),phone:fd.get('phone').trim(),email:fd.get('email').trim(),gstin:fd.get('gstin').trim(),signatory:fd.get('signatory').trim(),centres:String(fd.get('centres')).split('\n').map(s=>s.trim()).filter(Boolean)};
+  if(k==='config'){const fd=new FormData(form);const c={orgName:fd.get('orgName').trim(),address:fd.get('address').trim(),phone:fd.get('phone').trim(),email:fd.get('email').trim(),gstin:fd.get('gstin').trim(),signatory:fd.get('signatory').trim(),websiteUrl:(u=>/^https?:\/\//i.test(u)?u.replace(/\/?$/,'/'):'')(String(fd.get('websiteUrl')||'').trim()),centres:String(fd.get('centres')).split('\n').map(s=>s.trim()).filter(Boolean)};
     await W(()=>DB.doc('config/main').set({...c,updatedAt:now()}),'Details saved');return}
   const missing=F[k].filter(f=>f.req).find(f=>{const el=form.elements[f.k];return el&&!String(el.value||'').trim()});
   if(missing){const el=form.elements[missing.k];el.focus();toast(`${missing.l} is required.`,'bad');return}
   const v=collect(form,k);
   if(v.phone&&digits(v.phone).length<10){form.elements.phone.focus();toast('Enter a 10-digit mobile number.','bad');return}
   if(k==='payments'&&!(v.amount>0)){form.elements.amount.focus();toast('Enter the amount received.','bad');return}
-  const btn=form.querySelector('[type=submit]');btn.disabled=true;
+  const btn=form.querySelector('[type=submit]');
+  if(k==='resources'){
+    const old=D.id?M.resources.get(D.id):null;const picked=form.elements.file?.files?.[0];
+    if(picked&&kindForType(picked.type))v.kind=kindForType(picked.type); // the file decides the type
+    const hasFile=picked||(old&&old.file);
+    if(v.url&&!/^https?:\/\//i.test(v.url)){form.elements.url.focus();toast('Links must start with https://','bad');return}
+    if(['PDF','Image'].includes(v.kind)&&!hasFile&&!v.url){toast(`Choose the ${v.kind==='PDF'?'PDF':'image'} file to share.`,'bad');return}
+    if(v.kind==='Video'&&!hasFile&&!v.url){form.elements.url.focus();toast('Upload the video or paste its YouTube or Vimeo link.','bad');return}
+    if(v.kind==='Link'&&!v.url){form.elements.url.focus();toast('Paste the link to share.','bad');return}
+    if(v.kind==='Update'&&!v.summary&&!v.body){form.elements.summary.focus();toast('Write the update first.','bad');return}
+    if(picked){
+      const bar=form.querySelector('.upl');const fill=bar&&bar.firstElementChild;btn.disabled=true;if(bar)bar.hidden=false;
+      try{v.file=await BACKEND.uploads.upload(picked,pc=>{if(fill)fill.style.width=Math.round(pc*100)+'%'})}
+      catch(e){console.error(e);btn.disabled=false;if(bar)bar.hidden=true;toast(e&&e.message?e.message:'The upload didn’t finish. Check your connection and try again.','bad');return}
+    }
+  }
+  btn.disabled=true;
   const id=D.id;let newId=null;
   const ok=await W(async()=>{
     if(id){await upd(k,id,v);return}
@@ -596,7 +686,7 @@ async function submitForm(form){
     const ref=await add(k,v);newId=ref.id;
     if(k==='students'&&D.pre&&D.pre.fromEnquiry)await upd('enquiries',D.pre.fromEnquiry,{stage:'Converted'});
     if(k==='trainers'&&D.pre&&D.pre.fromEnquiry)await upd('enquiries',D.pre.fromEnquiry,{stage:'Converted'});
-  },id?'Saved':k==='payments'?'Payment recorded':`${NOUN[k][0].toUpperCase()+NOUN[k].slice(1)} added`);
+  },id?'Saved':k==='resources'?(v.published?'Published on the website':'Saved as a draft'):k==='payments'?'Payment recorded':`${NOUN[k][0].toUpperCase()+NOUN[k].slice(1)} added`);
   btn.disabled=false;
   if(!ok)return;
   if(k==='payments'&&newId){const sid=v.studentId;M.payments=M.payments||new Map();setTimeout(()=>{const p=S.payments.find(x=>x.id===newId)||{id:newId,...v};receipt(p)},400);openDetail('students',sid);return}
@@ -817,6 +907,10 @@ document.addEventListener('click',async ev=>{
   const el=ev.target.closest('[data-a]');
   if(!el)return;
   const a=el.dataset.a,k=el.dataset.k,id=el.dataset.id,v=el.dataset.v;
+  if(a==='rpublish'||a==='rpin'){const r=M.resources.get(el.dataset.id);if(!r)return;const key=a==='rpublish'?'published':'pinned';await W(()=>upd('resources',r.id,{[key]:!r[key]}),a==='rpublish'?(r.published?'Hidden from the website':'Published on the website'):(r.pinned?'Unpinned':'Pinned to the top'));return}
+  if(a==='theme'){toggleTheme();el.closest('details')?.removeAttribute('open');return}
+  if(a==='opennav'){setNav(true);return}
+  if(a==='closenav'){setNav(false);return}
   if(a==='hidetour'){try{localStorage.setItem(TOUR_KEY,'1')}catch{}render();return}
   if(['stage','progfilter','monthfilter','attdate','impmap','atttick','doc','impdup','impfile','setrole'].includes(a))return; // handled on change
   switch(a){
@@ -879,7 +973,28 @@ document.addEventListener('change',async ev=>{
 document.addEventListener('submit',ev=>{const f=ev.target.closest('form.f');if(!f)return;ev.preventDefault();submitForm(f)});
 document.addEventListener('keydown',ev=>{if(ev.key==='Escape'&&!$('#drawer').hidden)closeDrawer()});
 let qt;$('#q').addEventListener('input',e=>{clearTimeout(qt);qt=setTimeout(()=>{Q=e.target.value.trim();render()},120)});
-window.addEventListener('hashchange',route);
+window.addEventListener('hashchange',()=>{setNav(false);route()});
+
+/* ---------- theme, shortcuts, phone menu, scroll progress ---------- */
+function themeNow(){const t=document.documentElement.dataset.theme;return t||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light')}
+function paintThemeBtn(){const dark=themeNow()==='dark';const b=$('#themeBtn');b.innerHTML=svgI(dark?'sun':'moon');b.setAttribute('aria-label',dark?'Switch to light theme':'Switch to dark theme');b.title=dark?'Light theme':'Dark theme'}
+function toggleTheme(){
+  const next=themeNow()==='dark'?'light':'dark';const root=document.documentElement;
+  root.classList.add('theming');root.dataset.theme=next;try{localStorage.setItem('sb-theme',next)}catch{}
+  paintThemeBtn();setTimeout(()=>root.classList.remove('theming'),450);
+}
+matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change',paintThemeBtn);
+paintThemeBtn();
+if(/Mac|iPhone|iPad/.test(navigator.platform||navigator.userAgent))$('#kbd').textContent='⌘ K';
+document.addEventListener('keydown',ev=>{
+  const typing=/INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName||'');
+  if((ev.key==='k'||ev.key==='K')&&(ev.ctrlKey||ev.metaKey)){ev.preventDefault();$('#q').focus();$('#q').select();return}
+  if(ev.key==='/'&&!typing&&$('#drawer').hidden){ev.preventDefault();$('#q').focus();return}
+  if(ev.key==='Escape'&&document.activeElement===$('#q')&&$('#q').value){$('#q').value='';Q='';render()}
+  if(ev.key==='Escape'&&document.documentElement.classList.contains('navopen'))setNav(false);
+});
+function setNav(open){document.documentElement.classList.toggle('navopen',open);$('#navscrim').hidden=!open;$('#menuBtn').setAttribute('aria-expanded',open)}
+let sp=0;addEventListener('scroll',()=>{if(sp)return;sp=requestAnimationFrame(()=>{sp=0;const h=document.documentElement.scrollHeight-innerHeight;$('#progress').style.transform=`scaleX(${h>0?Math.min(1,scrollY/h):0})`})},{passive:true});
 
 route();
 connect();

@@ -144,6 +144,9 @@ Resources:
               - Effect: Allow
                 Action: [logs:CreateLogStream, logs:PutLogEvents]
                 Resource: !GetAtt ApiLogs.Arn
+              - Effect: Allow
+                Action: [s3:PutObject, s3:DeleteObject]
+                Resource: !Sub '${SiteBucket.Arn}/media/*'
 
   Api:
     Type: AWS::Lambda::Function
@@ -161,6 +164,8 @@ Resources:
           TABLE: !Ref Table
           POOL_ID: !Ref UserPool
           CLIENT_ID: !Ref UserPoolClient
+          MEDIA_BUCKET: !Ref SiteBucket
+          MEDIA_BASE: !Sub 'https://${Distribution.DomainName}'
       Code: !If
         - CodeFromS3
         - {S3Bucket: !Ref CodeS3Bucket, S3Key: !Ref CodeS3Key}
@@ -201,6 +206,11 @@ Resources:
       PublicAccessBlockConfiguration: {BlockPublicAcls: true, BlockPublicPolicy: true, IgnorePublicAcls: true, RestrictPublicBuckets: true}
       OwnershipControls: {Rules: [{ObjectOwnership: BucketOwnerEnforced}]}
       BucketEncryption: {ServerSideEncryptionConfiguration: [{ServerSideEncryptionByDefault: {SSEAlgorithm: AES256}}]}
+      # Website resource uploads go straight from the console to media/ with a signed,
+      # 15-minute form (key, type and size are fixed by the signature), so any origin may POST.
+      CorsConfiguration:
+        CorsRules:
+          - {AllowedMethods: [POST], AllowedOrigins: ['*'], AllowedHeaders: ['*'], MaxAge: 3000}
 
   SiteBucketPolicy:
     Type: AWS::S3::BucketPolicy

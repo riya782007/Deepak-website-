@@ -3,12 +3,32 @@
 import {randomBytes} from 'node:crypto';
 import {deepMerge} from './merge.mjs';
 
-export const COLLECTIONS = ['enquiries', 'students', 'programmes', 'batches', 'trainers', 'payments', 'payouts', 'engagements', 'config'];
-const AUDITED = new Set(['students', 'payments', 'payouts', 'trainers', 'engagements']);
+export const COLLECTIONS = ['enquiries', 'students', 'programmes', 'batches', 'trainers', 'payments', 'payouts', 'engagements', 'resources', 'config'];
+const AUDITED = new Set(['students', 'payments', 'payouts', 'trainers', 'engagements', 'resources']);
 export const ROLES = ['viewer', 'staff', 'admin', 'owner'];
 const RANK = {pending: 0, viewer: 1, staff: 2, admin: 3, owner: 4};
 const KINDS = ['Student course', 'Corporate training', 'HR consulting', 'Technology project', 'Student services', 'Personal development'];
 const TOMBSTONE_DAYS = 30;
+// Files staff may upload for the website's Resources page, with size limits in MB.
+export const UPLOAD_TYPES = {
+  'application/pdf': 25, 'image/jpeg': 10, 'image/png': 10, 'image/webp': 10, 'image/gif': 10,
+  'video/mp4': 200, 'video/webm': 200, 'video/quicktime': 200
+};
+const RESOURCE_KINDS = ['Update', 'PDF', 'Video', 'Image', 'Link'];
+const safeName = n => String(n || 'file').toLowerCase().replace(/[^a-z0-9.]+/g, '-').replace(/^-+|-+$/g, '').slice(-80) || 'file';
+
+// What the public website may see of a resource: published ones only, and only these fields.
+export function publicResource(item, mediaBase) {
+  const d = JSON.parse(item.d);
+  const fileUrl = d.file && /^media\/[\w./-]+$/.test(d.file.key || '') ? `${mediaBase}/${d.file.key}` : '';
+  const link = /^https?:\/\//i.test(d.url || '') ? d.url : '';
+  return {
+    id: item.id, kind: RESOURCE_KINDS.includes(d.kind) ? d.kind : 'Update',
+    title: String(d.title || '').slice(0, 200), summary: String(d.summary || '').slice(0, 600), body: String(d.body || '').slice(0, 8000),
+    category: String(d.category || '').slice(0, 60), date: /^\d{4}-\d{2}-\d{2}$/.test(d.date || '') ? d.date : '', pinned: !!d.pinned,
+    url: fileUrl || link, file: fileUrl ? {name: String(d.file.name || '').slice(0, 120), size: +d.file.size || 0, type: String(d.file.type || '')} : null
+  };
+}
 const OVERLAP_MS = 60e3; // re-send the last minute of changes so nothing is missed between polls
 
 const newId = () => Date.now().toString(36) + randomBytes(6).toString('hex');
@@ -41,7 +61,7 @@ function cleanEnquiry(body) {
   };
 }
 
-export function createApp({store, team, verify, now = () => Date.now()}) {
+export function createApp({store, team, files, verify, mediaBase = '', now = () => Date.now()}) {
   async function writeDoc(user, c, id, data, {mustExist, mustNotExist} = {}) {
     for (let attempt = 0; attempt < 4; attempt++) {
       const before = await store.get(c, id);
@@ -100,6 +120,10 @@ export function createApp({store, team, verify, now = () => Date.now()}) {
       const item = {c: params.c, id: params.id, d: '{}', v: before.v + 1, u: stamp(now()), g: 'doc', by: u.id, deleted: true, ttl: Math.floor(now() / 1000) + TOMBSTONE_DAYS * 86400};
       await store.put(item, before.v);
       if (AUDITED.has(params.c)) await store.audit({at: new Date(now()).toISOString(), by: u.id, email: u.email, action: 'delete', coll: params.c, docId: params.id, before: before.d, after: null});
+      if (params.c === 'resources' && files) {
+        const key = (JSON.parse(before.d).file || {}).key;
+        if (/^media\//.test(key || '')) await files.remove(key).catch(e => console.error('file not removed', key, e));
+      }
       return {ok: true};
     },
 
@@ -137,6 +161,27 @@ export function createApp({store, team, verify, now = () => Date.now()}) {
       return {ok: true};
     },
 
+    'POST /uploads': async (u, {body}) => {
+      need(RANK[u.role] >= RANK.staff, 403, 'Read only');
+      need(files, 503, 'File uploads are not set up');
+      const type = String(body.type || '').toLowerCase();
+      const maxMb = UPLOAD_TYPES[type];
+      need(maxMb, 400, 'Upload a PDF, an image (JPG, PNG, WebP, GIF) or a video (MP4, WebM, MOV)');
+      const size = Number(body.size);
+      need(size > 0 && size <= maxMb * 1048576, 400, `That file is too large. The limit for this type is ${maxMb} MB`);
+      const at = new Date(now());
+      const key = `media/${at.getUTCFullYear()}/${String(at.getUTCMonth() + 1).padStart(2, '0')}/${randomBytes(5).toString('hex')}-${safeName(body.name)}`;
+      const post = await files.presign({key, contentType: type, maxBytes: maxMb * 1048576});
+      return {...post, key, publicUrl: `${mediaBase}/${key}`};
+    },
+
+    'GET /public/resources': async () => {
+      const items = (await store.list('resources')).filter(i => !i.deleted);
+      const list = items.map(i => publicResource(i, mediaBase)).filter((r, n) => JSON.parse(items[n].d).published && r.title);
+      list.sort((a, b) => (b.pinned - a.pinned) || (b.date || '').localeCompare(a.date || ''));
+      return {resources: list, cache: 60};
+    },
+
     'POST /public/enquiry': async (_u, {body}) => {
       if (body.website) return {ok: true}; // honeypot field filled in by bots: accept and drop
       const data = cleanEnquiry(body);
@@ -169,7 +214,10 @@ export function createApp({store, team, verify, now = () => Date.now()}) {
       }
       let parsed = {};
       if (body) { try { parsed = JSON.parse(body); } catch { throw new HttpError(400, 'Body must be JSON'); } }
-      return {status: 200, body: await route.fn(user, {params, query, body: parsed})};
+      const out = await route.fn(user, {params, query, body: parsed});
+      const cache = out && out.cache;
+      if (cache) delete out.cache;
+      return {status: 200, body: out, ...(cache ? {headers: {'cache-control': `public, max-age=${cache}`}} : {})};
     } catch (e) {
       if (e instanceof HttpError) return {status: e.status, body: {error: e.message}};
       console.error(e);

@@ -2,6 +2,8 @@ import {initExperience} from './experience.js';
 import {company,services,pages,articles,audiences,process} from './content.js';
 import {header,footer,cta,button,card,arrow,icon} from './components.js';
 import {submitEnquiry,features} from './integrations.js';
+import {resourcesPage,initResources} from './resources.js';
+import './resources.css';
 
 const path=location.pathname.replace(/^\/|\/$/g,'');
 const current=pages.find(([p])=>p===path);
@@ -55,10 +57,11 @@ function privacy(){return `${hero('Your information,<br>handled thoughtfully.','
 
 const notFound=()=>`${hero('This page took<br>a different path.','The page you’re looking for could not be found. These are good places to continue.')}<section class="shell section"><div class="cards stagger">${[services[0],services[2],services[3]].map(s=>card(s)).join('')}</div><p style="margin-top:32px">${button('Back to home','')}</p></section>`;
 
-const body=path===''?home():path==='services'?servicesIndex():bySlug(path)?servicePage(bySlug(path)):path==='contact'?contact():path==='insights'?insights():editorial[path]?editorialPage(editorial[path]):path==='privacy'?privacy():notFound();
+const body=path===''?home():path==='services'?servicesIndex():bySlug(path)?servicePage(bySlug(path)):path==='contact'?contact():path==='insights'?insights():path==='resources'?resourcesPage(hero):editorial[path]?editorialPage(editorial[path]):path==='privacy'?privacy():notFound();
 document.title=`${current?.[1]||'Page not found'} | ${company.name}`;
 document.querySelector('#app').innerHTML=header(path)+`<main id="main">${body}</main>`+footer();
 initExperience();
+initResources();
 
 const form=document.querySelector('#enquiry');
 if(form){

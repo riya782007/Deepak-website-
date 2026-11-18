@@ -37,11 +37,19 @@ function freshStore() {
 }
 
 function load() {
-  try { const raw = localStorage.getItem(KEY); if (raw) return JSON.parse(raw); } catch {}
+  try {
+    const raw = localStorage.getItem(KEY);
+    if (raw) {
+      const saved = JSON.parse(raw);
+      // Browsers that opened the review copy before Resources existed get its samples too.
+      if (!saved.resources) saved.resources = freshStore().resources;
+      return saved;
+    }
+  } catch {}
   return freshStore();
 }
 
-const AUDITED = new Set(['students', 'payments', 'payouts', 'trainers', 'engagements']);
+const AUDITED = new Set(['students', 'payments', 'payouts', 'trainers', 'engagements', 'resources']);
 
 export function demoBackend({review = false} = {}) {
   let store = load();
@@ -91,6 +99,19 @@ export function demoBackend({review = false} = {}) {
   return {
     mode: 'demo', review, role: 'owner', me: {id: 'demo', name: review ? 'Reviewer' : 'Demo user'}, db, team: null,
     audit: {list: async () => [...(store._audit || [])].reverse()},
+    // Review copy: small files are kept in this browser as data, so nothing leaves the device.
+    uploads: {
+      upload(file, onProgress = () => {}) {
+        if (file.size > 1.5 * 1048576) return Promise.reject(new Error('In this review copy, files up to 1.5 MB stay in your browser. The live console takes PDFs up to 25 MB and videos up to 200 MB.'));
+        return new Promise((resolve, reject) => {
+          const r = new FileReader();
+          r.onprogress = e => e.lengthComputable && onProgress(e.loaded / e.total);
+          r.onload = () => { onProgress(1); resolve({key: '', url: r.result, name: file.name, size: file.size, type: file.type}); };
+          r.onerror = () => reject(new Error('Couldn’t read that file.'));
+          r.readAsDataURL(file);
+        });
+      }
+    },
     reset() { try { localStorage.removeItem(KEY); localStorage.removeItem('sb-review-tour-hidden'); } catch {} location.reload(); }
   };
 }

@@ -5,6 +5,7 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {generateKeyPairSync, sign} from 'node:crypto';
 import {createApp} from '../infra/api/app.mjs';
+import {presignPost} from '../infra/api/s3post.mjs';
 import {verifyIdToken} from '../infra/api/jwt.mjs';
 
 const region = 'ap-south-1', poolId = 'ap-south-1_TEST', clientId = 'client123';
@@ -48,10 +49,12 @@ function memoryTeam(people) {
 function setup() {
   const store = memoryStore();
   const team = memoryTeam([{user_id: 'owner-user', email: 'owner@sb.in', role: 'owner', enabled: true}, {user_id: 'staff-user', email: 'staff@sb.in', role: 'staff', enabled: true}]);
+  const removed = [];
+  const files = {presign: async ({key, contentType, maxBytes}) => ({url: 'https://bucket.example/', fields: {key, 'Content-Type': contentType, max: maxBytes}}), remove: async key => { removed.push(key); }};
   let clock = Date.parse('2026-11-14T10:00:00Z');
-  const app = createApp({store, team, now: () => clock, verify: t => verifyIdToken(t, {region, poolId, clientId, jwks})});
+  const app = createApp({store, team, files, mediaBase: 'https://site.example', now: () => clock, verify: t => verifyIdToken(t, {region, poolId, clientId, jwks})});
   const call = (role, method, path, body, query = {}) => app({method, path, query, headers: role ? {authorization: 'Bearer ' + as(role)} : {}, body: body === undefined ? undefined : JSON.stringify(body)});
-  return {store, team, call, tick: ms => { clock += ms; }};
+  return {store, team, call, removed, tick: ms => { clock += ms; }};
 }
 
 test('tokens: forged, expired, wrong client and missing tokens are refused', async () => {
@@ -161,4 +164,51 @@ test('website enquiries: anyone can add a New enquiry and nothing else', async (
   assert.equal(store.items.size, 1, 'honeypot submissions are dropped');
   assert.equal((await call(null, 'GET', '/docs')).status, 401);
   assert.equal((await call(null, 'POST', '/docs/enquiries', {name: 'x'})).status, 401);
+});
+
+test('uploads: staff get a signed upload for allowed files only', async () => {
+  const {call} = setup();
+  assert.equal((await call('viewer', 'POST', '/uploads', {name: 'a.pdf', type: 'application/pdf', size: 1000})).status, 403);
+  assert.equal((await call(null, 'POST', '/uploads', {name: 'a.pdf', type: 'application/pdf', size: 1000})).status, 401);
+  assert.equal((await call('staff', 'POST', '/uploads', {name: 'run.exe', type: 'application/x-msdownload', size: 1000})).status, 400);
+  assert.equal((await call('staff', 'POST', '/uploads', {name: 'big.pdf', type: 'application/pdf', size: 26 * 1048576})).status, 400);
+  const ok = await call('staff', 'POST', '/uploads', {name: 'Brochure 2026 (final).PDF', type: 'application/pdf', size: 2 * 1048576});
+  assert.equal(ok.status, 200);
+  assert.match(ok.body.key, /^media\/2026\/11\/[0-9a-f]{10}-brochure-2026-final-.pdf$/);
+  assert.equal(ok.body.publicUrl, 'https://site.example/' + ok.body.key);
+  assert.equal(ok.body.fields.max, 25 * 1048576);
+  assert.equal((await call('staff', 'POST', '/uploads', {name: 'intro.mp4', type: 'video/mp4', size: 150 * 1048576})).status, 200, 'videos up to 200 MB');
+});
+
+test('public resources: only published ones, only safe fields, pinned first', async () => {
+  const {call, removed} = setup();
+  const mk = d => call('staff', 'POST', '/docs/resources', d);
+  await mk({title: 'Draft', kind: 'PDF', published: false});
+  await mk({title: 'Old update', kind: 'Update', published: true, date: '2026-10-01', body: 'Hello'});
+  await mk({title: 'Pinned brochure', kind: 'PDF', published: true, pinned: true, date: '2026-09-01', file: {key: 'media/2026/09/abc-brochure.pdf', name: 'brochure.pdf', size: 1200, type: 'application/pdf'}, notes: 'internal'});
+  await mk({title: 'Sneaky', kind: 'Link', published: true, url: 'javascript:alert(1)'});
+  const {body: {id: delId}} = await mk({title: 'Gone', kind: 'Image', published: true, file: {key: 'media/2026/11/x-photo.jpg'}});
+  await call('admin', 'DELETE', `/docs/resources/${delId}`);
+  assert.deepEqual(removed, ['media/2026/11/x-photo.jpg'], 'deleting a resource removes its file');
+  const r = await call(null, 'GET', '/public/resources');
+  assert.equal(r.status, 200);
+  assert.equal(r.headers['cache-control'], 'public, max-age=60');
+  const list = r.body.resources;
+  assert.deepEqual(list.map(x => x.title), ['Pinned brochure', 'Old update', 'Sneaky']);
+  assert.equal(list[0].url, 'https://site.example/media/2026/09/abc-brochure.pdf');
+  assert.equal(list[2].url, '', 'non-web links are dropped');
+  assert.ok(!('notes' in list[0]) && !('published' in list[0]), 'internal fields stay private');
+});
+
+test('presigned POST policy pins the key, type and size', () => {
+  const {url, fields} = presignPost({bucket: 'sb-site-1', region: 'ap-south-1', key: 'media/2026/11/a.pdf', contentType: 'application/pdf', maxBytes: 100,
+    credentials: {accessKeyId: 'AKIA', secretAccessKey: 'secret', sessionToken: 'tok'}, now: new Date('2026-11-18T10:30:00Z')});
+  assert.equal(url, 'https://sb-site-1.s3.ap-south-1.amazonaws.com/');
+  const policy = JSON.parse(Buffer.from(fields.Policy, 'base64').toString());
+  assert.equal(policy.expiration, '2026-11-18T10:45:00.000Z');
+  assert.deepEqual(policy.conditions.slice(0, 3), [{bucket: 'sb-site-1'}, ['content-length-range', 1, 100], {key: 'media/2026/11/a.pdf'}]);
+  assert.ok(policy.conditions.some(c => c['Content-Type'] === 'application/pdf'));
+  assert.ok(policy.conditions.some(c => c['x-amz-security-token'] === 'tok'));
+  assert.equal(fields['x-amz-credential'], 'AKIA/20261118/ap-south-1/s3/aws4_request');
+  assert.match(fields['x-amz-signature'], /^[0-9a-f]{64}$/);
 });

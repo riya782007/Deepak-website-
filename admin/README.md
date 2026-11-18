@@ -48,6 +48,14 @@ Live updates poll for changes every 15 seconds while the console tab is open, an
 
 Cognito's built-in email is limited to 50 emails a day, which covers invitations and password resets for a small team. If that ever runs short, connect Amazon SES.
 
+## Website resources
+
+Setup lives under **Website → Resources** in the menu. Staff add updates, PDFs (up to 25 MB), images (10 MB), videos (200 MB, or a YouTube or Vimeo link) and links. Anything marked **Show on the website** appears on the website's `/resources/` page within a minute; drafts stay private. Files upload straight from the browser to the site bucket under `media/` with a signed, 15-minute form, and deleting a resource deletes its file. The public feed (`GET /public/resources`) returns published items only, with internal fields removed.
+
+## Look and feel
+
+Light and dark themes follow the device setting until someone picks one with the sun/moon button; the choice is remembered on that device. `Ctrl K` (or `⌘ K`, or `/`) jumps to search. The menu is grouped by how often each area is used: Daily work, Money & people, Website, Insights & setup.
+
 ## Roles
 
 | Role | Can |

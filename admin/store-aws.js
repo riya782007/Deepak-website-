@@ -2,7 +2,7 @@
 // No SDK: Cognito's sign-in API and our API are both plain JSON over HTTPS.
 import {deepMerge} from './merge.js';
 
-const COLLECTIONS = ['enquiries', 'students', 'programmes', 'batches', 'trainers', 'payments', 'payouts', 'engagements', 'config'];
+const COLLECTIONS = ['enquiries', 'students', 'programmes', 'batches', 'trainers', 'payments', 'payouts', 'engagements', 'resources', 'config'];
 const KEY = 'sb-console-session';
 const POLL_MS = 15000;
 
@@ -231,6 +231,25 @@ export async function awsBackend({api: apiUrl, region, clientId}) {
     me: {id: me.id, name: me.name || me.email, email: me.email},
     db: makeDb(api),
     signOut,
+    // Website files go straight from the browser to storage with a short-lived signed form.
+    uploads: {
+      async upload(file, onProgress = () => {}) {
+        const sign = await api('POST', '/uploads', {name: file.name, type: file.type, size: file.size});
+        const body = new FormData();
+        Object.entries(sign.fields).forEach(([k, v]) => body.append(k, v));
+        body.append('file', file);
+        await new Promise((resolve, reject) => {
+          const x = new XMLHttpRequest();
+          x.open('POST', sign.url);
+          x.upload.onprogress = e => e.lengthComputable && onProgress(e.loaded / e.total);
+          x.onload = () => (x.status >= 200 && x.status < 300 ? resolve() : reject(new Error('The upload was refused. Try a smaller file.')));
+          x.onerror = () => reject(new Error('The upload didn’t finish. Check your connection and try again.'));
+          x.send(body);
+        });
+        onProgress(1);
+        return {key: sign.key, url: sign.publicUrl, name: file.name, size: file.size, type: file.type};
+      }
+    },
     audit: me.role === 'owner' || me.role === 'admin' ? {list: async () => (await api('GET', '/audit?limit=100')).entries} : null,
     team: me.role !== 'owner' && me.role !== 'admin' ? null : {
       list: async () => (await api('GET', '/team')).people,

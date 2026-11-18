@@ -39,6 +39,14 @@ export function enquiryDocument(data) {
   };
 }
 
+// Published resources from the admin console (PDFs, videos, images, updates, links).
+export async function loadResources() {
+  if (!CONSOLE_API) return null;
+  const response = await fetch(`${CONSOLE_API}/public/resources`);
+  if (!response.ok) throw new Error('Resources could not be loaded');
+  return (await response.json()).resources || [];
+}
+
 // Returns {sent:true} when delivered, otherwise {sent:false, file} with a local text brief.
 export async function submitEnquiry(data, summary) {
   if (features.console) {
